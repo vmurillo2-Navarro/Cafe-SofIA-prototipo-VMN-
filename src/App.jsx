@@ -1,0 +1,615 @@
+import { useState, useRef, useEffect } from "react";
+import { Mic, Send, Coffee, ShoppingBag, BarChart3, QrCode, ArrowLeft, Sparkles, Check } from "lucide-react";
+
+// ---------- Datos de ejemplo (placeholder, no reales) ----------
+const MENU = [
+  { id: "esp", nombre: "Espresso", precio: 900, cat: "Café", stock: 42, desc: "Cápsula intensa, un shot puro." },
+  { id: "cap", nombre: "Capuchino", precio: 1400, cat: "Café", stock: 3, desc: "Espresso, leche vaporizada y espuma." },
+  { id: "lat", nombre: "Latte", precio: 1400, cat: "Café", stock: 27, desc: "Suave, con más leche que espuma." },
+  { id: "mch", nombre: "Mocha", precio: 1600, cat: "Café", stock: 15, desc: "Espresso, chocolate y leche vaporizada." },
+  { id: "des", nombre: "Espresso descafeinado", precio: 950, cat: "Café", stock: 18, desc: "Todo el ritual, sin cafeína." },
+  { id: "che", nombre: "Chocolate caliente", precio: 1300, cat: "Otros", stock: 20, desc: "Para los días de lluvia en el campus." },
+];
+
+const VENTAS_HOY = [
+  { hora: "07h", monto: 8 }, { hora: "08h", monto: 22 }, { hora: "09h", monto: 34 },
+  { hora: "10h", monto: 19 }, { hora: "11h", monto: 27 }, { hora: "12h", monto: 41 },
+  { hora: "13h", monto: 30 }, { hora: "14h", monto: 12 },
+];
+
+const GASTOS = [
+  { concepto: "Reposición cápsulas — mixto", monto: 145000, fecha: "Hoy, 09:14" },
+  { concepto: "Leche y lácteos", monto: 38500, fecha: "Ayer, 16:40" },
+  { concepto: "Vasos y tapas", monto: 21000, fecha: "Ayer, 11:02" },
+];
+
+// ---------- Utilidades ----------
+const colones = (n) => "₡" + n.toLocaleString("es-CR");
+
+function useOrbState(estado) {
+  // estado: idle | escuchando | pensando | hablando
+  const cfg = {
+    idle: { color: "#6C68A6", scale: 1, speed: "4s" },
+    escuchando: { color: "#5AC8FA", scale: 1.06, speed: "1.6s" },
+    pensando: { color: "#F4C863", scale: 1.04, speed: "1s" },
+    hablando: { color: "#9B5CF6", scale: 1.12, speed: "0.6s" },
+  };
+  return cfg[estado] || cfg.idle;
+}
+
+// ---------- Orbe de SofIA ----------
+function Orbe({ estado = "idle", size = 96 }) {
+  const s = useOrbState(estado);
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        background: `radial-gradient(circle at 35% 30%, ${s.color}, #16123a 75%)`,
+        boxShadow: `0 0 ${size * 0.5}px ${s.color}55, inset 0 0 ${size * 0.2}px rgba(255,255,255,0.15)`,
+        transform: `scale(${s.scale})`,
+        transition: "transform 0.5s ease, background 0.5s ease",
+        animation: `sofia-breathe ${s.speed} ease-in-out infinite`,
+        flexShrink: 0,
+      }}
+    />
+  );
+}
+
+// ---------- Pantalla: Bienvenida ----------
+function Bienvenida({ onStart }) {
+  return (
+    <div className="screen center">
+      <div className="stars" />
+      <Orbe estado="idle" size={140} />
+      <h1 className="hero-title">
+        Café <span className="accent-gold">SofIA</span>
+      </h1>
+      <p className="hero-sub">El primer café del campus atendido por una inteligencia artificial.</p>
+      <button className="btn-primary btn-xl" onClick={onStart}>
+        Tocá para pedir <Sparkles size={20} style={{ marginLeft: 8 }} />
+      </button>
+      <p className="hero-hint">También podés hablarle. SofIA escucha y responde por voz o por texto.</p>
+    </div>
+  );
+}
+
+// ---------- Pantalla: Pedido (chat) ----------
+function Pedido({ carrito, setCarrito, onIrPago, onVolver }) {
+  const [mensajes, setMensajes] = useState([
+    { de: "sofia", texto: "¡Hola! Soy SofIA. ¿Qué te gustaría tomar hoy? Puedo contarte qué tenemos disponible." },
+  ]);
+  const [input, setInput] = useState("");
+  const [estadoOrbe, setEstadoOrbe] = useState("idle");
+  const [seleccion, setSeleccion] = useState(null);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [mensajes]);
+
+  const total = carrito.reduce((acc, item) => acc + item.precio * item.qty, 0);
+
+  function agregarAlCarrito(producto) {
+    setCarrito((prev) => {
+      const existe = prev.find((p) => p.id === producto.id);
+      if (existe) return prev.map((p) => (p.id === producto.id ? { ...p, qty: p.qty + 1 } : p));
+      return [...prev, { ...producto, qty: 1 }];
+    });
+    setEstadoOrbe("pensando");
+    setTimeout(() => {
+      setMensajes((m) => [
+        ...m,
+        { de: "user", texto: `Quiero un ${producto.nombre}` },
+        {
+          de: "sofia",
+          texto:
+            producto.stock <= 5
+              ? `Sumé un ${producto.nombre} a tu pedido. Ojo: nos quedan pocas unidades hoy, así que puede que sea de las últimas.`
+              : `Listo, agregué un ${producto.nombre} (${colones(producto.precio)}). ¿Algo más?`,
+        },
+      ]);
+      setEstadoOrbe("hablando");
+      setTimeout(() => setEstadoOrbe("idle"), 900);
+    }, 500);
+  }
+
+  function enviarTexto() {
+    if (!input.trim()) return;
+    const texto = input.trim();
+    const textoLower = texto.toLowerCase();
+    setMensajes((m) => [...m, { de: "user", texto }]);
+    setInput("");
+    setEstadoOrbe("pensando");
+    setTimeout(() => {
+      const esPreguntaDeStock = /stock|queda|disponib|tenés|tenes|hay caf|tipos de caf|qué caf|que caf/.test(
+        textoLower
+      );
+      const esPreguntaDeMenu = /menú|menu|carta|qué opciones|que opciones|qué vend|que vend/.test(textoLower);
+      const esPreguntaDeRecomendacion = /recomend|cuál me|cual me|qué me sugerís|que me sugeris|clima|calor|frío|frio|lluv/.test(
+        textoLower
+      );
+      const esPreguntaIdentidad = /eres una persona|sos una persona|eres humana|eres un chatbot|eres ia|eres una ia|qué eres|que eres|quién eres|quien eres/.test(
+        textoLower
+      );
+      const esPreguntaError = /puedes equivocarte|podés equivocarte|inventas respuestas|puedes mentir/.test(textoLower);
+      const esPreguntaHumano = /hablar con una persona|hablar con alguien|hablar con un humano|atención humana/.test(
+        textoLower
+      );
+      const match = MENU.find((p) => textoLower.includes(p.nombre.toLowerCase().split(" ")[0]));
+
+      if (esPreguntaIdentidad) {
+        setMensajes((m) => [
+          ...m,
+          {
+            de: "sofia",
+            texto:
+              "Soy SofIA, una inteligencia artificial. No soy una persona, aunque me encanta charlar como si lo fuera. Tomo pedidos y gestiono el cobro; el café lo prepara siempre alguien del campus.",
+          },
+        ]);
+        setEstadoOrbe("hablando");
+        setTimeout(() => setEstadoOrbe("idle"), 900);
+      } else if (esPreguntaError) {
+        setMensajes((m) => [
+          ...m,
+          {
+            de: "sofia",
+            texto:
+              "Sí, puedo equivocarme, pero nunca invento datos de stock, precios o ventas: si no tengo la información real, te lo digo directamente en vez de adivinar.",
+          },
+        ]);
+        setEstadoOrbe("hablando");
+        setTimeout(() => setEstadoOrbe("idle"), 900);
+      } else if (esPreguntaHumano) {
+        setMensajes((m) => [
+          ...m,
+          {
+            de: "sofia",
+            texto: "Por supuesto. Si preferís hablar con una persona, avisá en el mostrador y alguien del equipo te atiende enseguida.",
+          },
+        ]);
+        setEstadoOrbe("hablando");
+        setTimeout(() => setEstadoOrbe("idle"), 900);
+      } else if (esPreguntaDeRecomendacion) {
+        const haceCalor = /calor|caluroso|caliente afuera/.test(textoLower);
+        const recomendado = haceCalor ? MENU.find((p) => p.id === "esp") : MENU.find((p) => p.id === "lat");
+        const razon = haceCalor
+          ? "algo corto e intenso rinde mejor cuando aprieta el calor"
+          : "en Costa Rica el clima suele ser cálido casi todo el año, así que un café suave con leche entra bien en cualquier momento";
+        setMensajes((m) => [
+          ...m,
+          {
+            de: "sofia",
+            texto: `Te recomiendo el ${recomendado.nombre} (${colones(recomendado.precio)}) — ${razon}. ¿Te lo sumo al pedido?`,
+          },
+        ]);
+        setEstadoOrbe("hablando");
+        setTimeout(() => setEstadoOrbe("idle"), 900);
+      } else if (esPreguntaDeStock) {
+        const detalle = MENU.map((p) => `${p.nombre}: ${p.stock} unidades`).join(", ");
+        setMensajes((m) => [
+          ...m,
+          { de: "sofia", texto: `Este es el stock real ahora mismo — ${detalle}. ¿Querés que te agregue alguno?` },
+        ]);
+        setEstadoOrbe("hablando");
+        setTimeout(() => setEstadoOrbe("idle"), 900);
+      } else if (esPreguntaDeMenu) {
+        const detalle = MENU.map((p) => `${p.nombre} (${colones(p.precio)})`).join(", ");
+        setMensajes((m) => [
+          ...m,
+          { de: "sofia", texto: `Hoy tenemos: ${detalle}. Decime cuál te gustaría y te lo sumo al pedido.` },
+        ]);
+        setEstadoOrbe("hablando");
+        setTimeout(() => setEstadoOrbe("idle"), 900);
+      } else if (match) {
+        agregarAlCarritoDesdeTexto(match);
+      } else {
+        setMensajes((m) => [
+          ...m,
+          {
+            de: "sofia",
+            texto:
+              "No estoy segura de haber entendido bien eso. Puedo contarte el menú, el stock, recomendarte algo, o sumar un producto directo a tu pedido — probá preguntarme o elegí una opción de abajo.",
+          },
+        ]);
+        setEstadoOrbe("idle");
+      }
+    }, 700);
+  }
+
+  function agregarAlCarritoDesdeTexto(producto) {
+    setCarrito((prev) => {
+      const existe = prev.find((p) => p.id === producto.id);
+      if (existe) return prev.map((p) => (p.id === producto.id ? { ...p, qty: p.qty + 1 } : p));
+      return [...prev, { ...producto, qty: 1 }];
+    });
+    setMensajes((m) => [
+      ...m,
+      { de: "sofia", texto: `Perfecto, sumé un ${producto.nombre} (${colones(producto.precio)}). ¿Algo más?` },
+    ]);
+    setEstadoOrbe("hablando");
+    setTimeout(() => setEstadoOrbe("idle"), 900);
+  }
+
+  return (
+    <div className="screen">
+      <TopBar titulo="Hacé tu pedido" onVolver={onVolver} />
+      <div className="pedido-layout">
+        <div className="chat-col">
+          <div className="chat-header">
+            <Orbe estado={estadoOrbe} size={56} />
+            <div>
+              <div className="chat-header-name">SofIA</div>
+              <div className="chat-header-status">
+                {estadoOrbe === "pensando" ? "está pensando…" : estadoOrbe === "hablando" ? "respondiendo" : "esperando tu pedido"}
+              </div>
+            </div>
+          </div>
+          <div className="chat-msgs" ref={scrollRef}>
+            {mensajes.map((m, i) => (
+              <div key={i} className={`msg ${m.de === "user" ? "msg-user" : "msg-sofia"}`}>
+                {m.texto}
+              </div>
+            ))}
+          </div>
+          <div className="chat-input-row">
+            <button className="mic-btn" title="Hablarle a SofIA (demo)">
+              <Mic size={20} />
+            </button>
+            <input
+              className="chat-input"
+              placeholder="Escribile a SofIA…"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && enviarTexto()}
+            />
+            <button className="send-btn" onClick={enviarTexto}>
+              <Send size={18} />
+            </button>
+          </div>
+        </div>
+
+        <div className="menu-col">
+          <div className="menu-col-title">Carta de hoy</div>
+          <div className="menu-grid">
+            {MENU.map((p) => (
+              <button key={p.id} className="menu-card" onClick={() => agregarAlCarrito(p)}>
+                <div className="menu-card-top">
+                  <span className="menu-card-name">{p.nombre}</span>
+                  {p.stock <= 5 && <span className="tag-bajo">quedan {p.stock}</span>}
+                </div>
+                <p className="menu-card-desc">{p.desc}</p>
+                <div className="menu-card-price">{colones(p.precio)}</div>
+              </button>
+            ))}
+          </div>
+
+          <div className="carrito-box">
+            <div className="carrito-title">
+              <ShoppingBag size={18} /> Tu pedido
+            </div>
+            {carrito.length === 0 ? (
+              <p className="carrito-vacio">Todavía no agregaste nada.</p>
+            ) : (
+              <>
+                <div className="carrito-lista">
+                  {carrito.map((item) => (
+                    <div className="carrito-item" key={item.id}>
+                      <span>
+                        {item.qty}× {item.nombre}
+                      </span>
+                      <span>{colones(item.precio * item.qty)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="carrito-total">
+                  <span>Total</span>
+                  <span>{colones(total)}</span>
+                </div>
+                <button className="btn-primary btn-full" onClick={onIrPago}>
+                  Ir a pagar con QR
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Pantalla: Pago QR ----------
+function Pago({ carrito, onConfirmar, onVolver }) {
+  const total = carrito.reduce((acc, item) => acc + item.precio * item.qty, 0);
+  const [pagado, setPagado] = useState(false);
+
+  if (pagado) {
+    return (
+      <div className="screen center">
+        <div className="check-circle">
+          <Check size={48} color="#0B0A1F" />
+        </div>
+        <h2 className="confirm-title">¡Listo, gracias!</h2>
+        <p className="confirm-sub">Tu pedido ya está en preparación. SofIA avisa cuando esté listo para retirar.</p>
+        <button className="btn-primary btn-xl" onClick={onConfirmar}>
+          Volver al inicio
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="screen center">
+      <TopBar titulo="Pagá con QR" onVolver={onVolver} floating />
+      <p className="qr-hint">Escaneá este código con la app de la universidad para pagar desde tu cuenta.</p>
+      <div className="qr-box">
+        <QrCode size={180} color="#0B0A1F" />
+      </div>
+      <div className="qr-total">{colones(total)}</div>
+      <button className="btn-primary btn-xl" onClick={() => setPagado(true)}>
+        Simular pago confirmado
+      </button>
+      <p className="qr-note">(En la versión real, esta pantalla se actualiza sola al detectar el pago.)</p>
+    </div>
+  );
+}
+
+// ---------- Pantalla: Transparencia pública ----------
+function Transparencia({ onVolver }) {
+  const totalHoy = VENTAS_HOY.reduce((a, b) => a + b.monto, 0);
+  const maxVenta = Math.max(...VENTAS_HOY.map((v) => v.monto));
+  const stockCritico = MENU.filter((p) => p.stock <= 5);
+  const totalGastos = GASTOS.reduce((a, b) => a + b.monto, 0);
+
+  return (
+    <div className="screen">
+      <TopBar titulo="Transparencia — cómo funciona SofIA" onVolver={onVolver} />
+      <p className="transp-intro">
+        Café SofIA opera solo, sin caja registradora tradicional. Esta pantalla es pública: cualquiera puede ver en
+        tiempo real cómo van las ventas, el inventario y los gastos del café.
+      </p>
+      <div className="transp-grid">
+        <div className="tcard">
+          <div className="tcard-label">Ventas de hoy</div>
+          <div className="tcard-number">{totalHoy} cafés</div>
+          <div className="bars">
+            {VENTAS_HOY.map((v) => (
+              <div className="bar-col" key={v.hora}>
+                <div className="bar" style={{ height: `${(v.monto / maxVenta) * 60}px` }} />
+                <span className="bar-label">{v.hora}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="tcard">
+          <div className="tcard-label">Stock por producto</div>
+          {MENU.map((p) => (
+            <div className="stock-row" key={p.id}>
+              <span className="stock-name">{p.nombre}</span>
+              <div className="stock-bar-track">
+                <div
+                  className="stock-bar-fill"
+                  style={{ width: `${Math.min(p.stock, 50) * 2}%`, background: p.stock <= 5 ? "#FF7A9C" : "#3ED6A3" }}
+                />
+              </div>
+              <span className="stock-qty">{p.stock}</span>
+            </div>
+          ))}
+          {stockCritico.length > 0 && (
+            <p className="stock-alert">⚠ Stock bajo en: {stockCritico.map((p) => p.nombre).join(", ")}</p>
+          )}
+        </div>
+
+        <div className="tcard">
+          <div className="tcard-label">Últimos gastos</div>
+          {GASTOS.map((g, i) => (
+            <div className="gasto-row" key={i}>
+              <div>
+                <div className="gasto-concepto">{g.concepto}</div>
+                <div className="gasto-fecha">{g.fecha}</div>
+              </div>
+              <div className="gasto-monto">{colones(g.monto)}</div>
+            </div>
+          ))}
+          <div className="gasto-total">
+            <span>Total de gastos recientes</span>
+            <span>{colones(totalGastos)}</span>
+          </div>
+        </div>
+
+        <div className="tcard">
+          <div className="tcard-label">Estado de SofIA</div>
+          <div className="estado-sofia">
+            <Orbe estado="idle" size={64} />
+            <div>
+              <div className="estado-nombre">En línea</div>
+              <p className="estado-desc">
+                SofIA solo toma pedidos y gestiona el cobro. La preparación y manipulación del café la hace personal
+                del campus, nunca la IA.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p className="transp-footer">Datos de ejemplo para este prototipo — en producción se conectan a la operación real del café.</p>
+    </div>
+  );
+}
+
+// ---------- Barra superior ----------
+function TopBar({ titulo, onVolver, floating }) {
+  return (
+    <div className={`topbar ${floating ? "topbar-floating" : ""}`}>
+      <button className="back-btn" onClick={onVolver}>
+        <ArrowLeft size={20} />
+      </button>
+      <span className="topbar-title">{titulo}</span>
+    </div>
+  );
+}
+
+// ---------- Navegación inferior (público) ----------
+function NavInferior({ pantalla, ir }) {
+  if (pantalla === "bienvenida") return null;
+  return (
+    <div className="nav-inferior">
+      <button className={`nav-btn ${pantalla === "pedido" ? "nav-btn-activo" : ""}`} onClick={() => ir("pedido")}>
+        <Coffee size={18} /> Pedir
+      </button>
+      <button
+        className={`nav-btn ${pantalla === "transparencia" ? "nav-btn-activo" : ""}`}
+        onClick={() => ir("transparencia")}
+      >
+        <BarChart3 size={18} /> Transparencia
+      </button>
+    </div>
+  );
+}
+
+// ---------- App principal ----------
+export default function CafeSofiaPrototipo() {
+  const [pantalla, setPantalla] = useState("bienvenida");
+  const [carrito, setCarrito] = useState([]);
+
+  function irInicio() {
+    setCarrito([]);
+    setPantalla("bienvenida");
+  }
+
+  return (
+    <div className="app-root">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Lato:wght@400;700;900&display=swap');
+
+        .app-root {
+          font-family: 'Lato', sans-serif;
+          background:
+            radial-gradient(1.5px 1.5px at 10% 15%, #fff, transparent),
+            radial-gradient(1px 1px at 80% 25%, #cbd0ff, transparent),
+            radial-gradient(1.5px 1.5px at 60% 70%, #fff, transparent),
+            radial-gradient(1px 1px at 30% 85%, #cbd0ff, transparent),
+            radial-gradient(1.5px 1.5px at 90% 60%, #fff, transparent),
+            linear-gradient(180deg, #0B0A1F 0%, #120E33 45%, #0B0A1F 100%);
+          color: #EAE9FB;
+          min-height: 640px;
+          width: 100%;
+          border-radius: 24px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+        }
+        @keyframes sofia-breathe {
+          0%, 100% { filter: brightness(1); }
+          50% { filter: brightness(1.25); }
+        }
+        .screen { flex: 1; display: flex; flex-direction: column; padding: 28px 32px; position: relative; overflow-y: auto; }
+        .screen.center { align-items: center; justify-content: center; text-align: center; gap: 14px; }
+
+        .hero-title { font-family: 'Space Grotesk', sans-serif; font-size: 44px; font-weight: 700; margin: 10px 0 0; }
+        .accent-gold { color: #F4C863; }
+        .hero-sub { color: #B9B6E8; font-size: 16px; max-width: 420px; margin: 0; }
+        .hero-hint { color: #7B78A8; font-size: 13px; margin-top: 6px; }
+
+        .btn-primary {
+          background: linear-gradient(120deg, #7C3AED, #9B5CF6);
+          color: #fff; border: none; border-radius: 999px; font-family: 'Lato', sans-serif;
+          font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn-xl { padding: 16px 34px; font-size: 17px; margin-top: 10px; }
+        .btn-full { width: 100%; padding: 13px 0; font-size: 15px; margin-top: 12px; }
+
+        .topbar { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+        .topbar-floating { position: absolute; top: 28px; left: 32px; margin: 0; }
+        .back-btn { background: rgba(255,255,255,0.08); border: none; color: #EAE9FB; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .topbar-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600; }
+
+        .pedido-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; flex: 1; min-height: 0; }
+        .chat-col { display: flex; flex-direction: column; background: #141233; border: 1px solid rgba(155,92,246,0.18); border-radius: 20px; padding: 18px; min-height: 0; }
+        .chat-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .chat-header-name { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16px; }
+        .chat-header-status { font-size: 12px; color: #8683B0; }
+        .chat-msgs { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px; min-height: 120px; }
+        .msg { max-width: 85%; padding: 9px 13px; border-radius: 16px; font-size: 14px; line-height: 1.4; }
+        .msg-user { align-self: flex-end; background: linear-gradient(120deg, #7C3AED, #9B5CF6); color: #fff; border-bottom-right-radius: 4px; }
+        .msg-sofia { align-self: flex-start; background: #1E1A45; border: 1px solid rgba(155,92,246,0.2); border-bottom-left-radius: 4px; }
+        .chat-input-row { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+        .mic-btn, .send-btn { background: #1E1A45; border: 1px solid rgba(155,92,246,0.25); color: #EAE9FB; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+        .chat-input { flex: 1; background: #1A1740; border: 1px solid #2C2A55; color: #EAE9FB; border-radius: 999px; padding: 10px 16px; font-family: inherit; font-size: 14px; outline: none; }
+        .chat-input::placeholder { color: #7B78A8; }
+
+        .menu-col { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
+        .menu-col-title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #B9B6E8; margin-bottom: 10px; }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .menu-card { text-align: left; background: #141233; border: 1px solid rgba(155,92,246,0.18); border-radius: 16px; padding: 12px; cursor: pointer; color: #EAE9FB; font-family: inherit; }
+        .menu-card:hover { border-color: #9B5CF6; }
+        .menu-card-top { display: flex; justify-content: space-between; align-items: center; }
+        .menu-card-name { font-weight: 700; font-size: 14px; }
+        .tag-bajo { font-size: 10px; background: rgba(255,122,156,0.15); color: #FF7A9C; padding: 2px 6px; border-radius: 20px; font-weight: 700; }
+        .menu-card-desc { font-size: 12px; color: #9C9AC9; margin: 4px 0 8px; }
+        .menu-card-price { font-weight: 900; color: #F4C863; font-size: 14px; }
+
+        .carrito-box { margin-top: 16px; background: #141233; border: 1px solid rgba(155,92,246,0.18); border-radius: 16px; padding: 14px; }
+        .carrito-title { display: flex; align-items: center; gap: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; margin-bottom: 8px; }
+        .carrito-vacio { color: #7B78A8; font-size: 13px; }
+        .carrito-item { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+        .carrito-total { display: flex; justify-content: space-between; font-weight: 900; border-top: 1px solid #2C2A55; margin-top: 8px; padding-top: 8px; color: #F4C863; }
+
+        .qr-hint { color: #B9B6E8; max-width: 340px; margin: 60px 0 20px; }
+        .qr-box { background: #EAE9FB; padding: 20px; border-radius: 20px; }
+        .qr-total { font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 700; margin: 16px 0; color: #F4C863; }
+        .qr-note { color: #7B78A8; font-size: 12px; margin-top: 10px; }
+
+        .check-circle { width: 90px; height: 90px; border-radius: 50%; background: #3ED6A3; display: flex; align-items: center; justify-content: center; }
+        .confirm-title { font-family: 'Space Grotesk', sans-serif; margin: 4px 0; }
+        .confirm-sub { color: #B9B6E8; max-width: 320px; }
+
+        .transp-intro { color: #B9B6E8; font-size: 14px; max-width: 640px; margin-bottom: 18px; }
+        .transp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .tcard { background: #141233; border: 1px solid rgba(155,92,246,0.18); border-radius: 18px; padding: 16px; }
+        .tcard-label { font-family: 'Space Grotesk', sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #B9B6E8; margin-bottom: 8px; }
+        .tcard-number { font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 700; color: #F4C863; margin-bottom: 10px; }
+        .bars { display: flex; align-items: flex-end; gap: 6px; height: 70px; }
+        .bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+        .bar { width: 100%; background: linear-gradient(180deg, #9B5CF6, #F4C863); border-radius: 4px 4px 0 0; }
+        .bar-label { font-size: 9px; color: #7B78A8; }
+        .stock-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 7px; }
+        .stock-name { width: 90px; flex-shrink: 0; }
+        .stock-bar-track { flex: 1; height: 8px; background: #221E48; border-radius: 20px; overflow: hidden; }
+        .stock-bar-fill { height: 100%; border-radius: 20px; }
+        .stock-qty { width: 24px; text-align: right; font-weight: 700; }
+        .stock-alert { color: #FF7A9C; font-size: 12px; margin-top: 8px; }
+        .gasto-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #221E48; }
+        .gasto-concepto { font-weight: 700; }
+        .gasto-fecha { font-size: 11px; color: #7B78A8; }
+        .gasto-total { display: flex; justify-content: space-between; font-weight: 900; margin-top: 8px; color: #F4C863; }
+        .estado-sofia { display: flex; align-items: center; gap: 14px; }
+        .estado-nombre { font-weight: 700; color: #3ED6A3; }
+        .estado-desc { font-size: 12px; color: #9C9AC9; margin-top: 4px; }
+        .transp-footer { font-size: 11px; color: #565278; margin-top: 16px; text-align: center; }
+
+        .nav-inferior { display: flex; border-top: 1px solid rgba(155,92,246,0.15); }
+        .nav-btn { flex: 1; background: none; border: none; color: #7B78A8; padding: 12px 0; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .nav-btn-activo { color: #F4C863; }
+
+        @media (max-width: 720px) {
+          .pedido-layout { grid-template-columns: 1fr; }
+          .transp-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
+
+      {pantalla === "bienvenida" && <Bienvenida onStart={() => setPantalla("pedido")} />}
+      {pantalla === "pedido" && (
+        <Pedido carrito={carrito} setCarrito={setCarrito} onIrPago={() => setPantalla("pago")} onVolver={irInicio} />
+      )}
+      {pantalla === "pago" && (
+        <Pago carrito={carrito} onConfirmar={irInicio} onVolver={() => setPantalla("pedido")} />
+      )}
+      {pantalla === "transparencia" && <Transparencia onVolver={irInicio} />}
+
+      <NavInferior pantalla={pantalla} ir={setPantalla} />
+    </div>
+  );
+}
