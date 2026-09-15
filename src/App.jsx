@@ -522,10 +522,109 @@ function NavInferior({ pantalla, ir }) {
   );
 }
 
+function Admin() {
+  const [password, setPassword] = useState("");
+  const [autenticado, setAutenticado] = useState(false);
+  const [datos, setDatos] = useState(null);
+  const [error, setError] = useState("");
+  const [cargando, setCargando] = useState(false);
+
+  async function cargarDatos(clave = password) {
+    setCargando(true);
+    setError("");
+    try {
+      const respuesta = await fetch("/api/admin", { headers: { "x-admin-password": clave } });
+      const resultado = await respuesta.json();
+      if (!respuesta.ok || !resultado.ok) throw new Error(resultado.error || "No se pudo cargar el panel.");
+      setDatos(resultado);
+      setAutenticado(true);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  async function ejecutar(action, data) {
+    setCargando(true);
+    setError("");
+    try {
+      const respuesta = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-password": password },
+        body: JSON.stringify({ action, data }),
+      });
+      const resultado = await respuesta.json();
+      if (!respuesta.ok || !resultado.ok) throw new Error(resultado.error || "La acción no pudo completarse.");
+      setDatos(resultado);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  if (!autenticado) {
+    return (
+      <div className="app-root">
+        <style>{`.app-root{font-family:Lato,sans-serif;background:linear-gradient(180deg,#0B0A1F 0%,#120E33 45%,#0B0A1F 100%);color:#EAE9FB;min-height:100vh;width:100%;display:flex;flex-direction:column}.screen{flex:1;display:flex;flex-direction:column;padding:28px 32px;position:relative;overflow-y:auto}.screen.center{align-items:center;justify-content:center;text-align:center;gap:14px}.hero-title{font-family:Space Grotesk,sans-serif;font-size:44px;font-weight:700;margin:10px 0 0}.hero-sub{color:#B9B6E8;font-size:16px;max-width:420px;margin:0}.chat-input{background:#1A1740;border:1px solid #2C2A55;color:#EAE9FB;border-radius:999px;padding:10px 16px;font-family:inherit;font-size:14px;outline:none;width:min(100%,360px);box-sizing:border-box}.btn-primary{background:linear-gradient(120deg,#7C3AED,#9B5CF6);color:#fff;border:none;border-radius:999px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:12px 20px}.btn-xl{font-size:16px;padding:14px 24px}.qr-note{color:#FF7A9C;font-size:12px;margin-top:10px}`}</style>
+        <div className="screen center">
+          <h1 className="hero-title">Trastienda</h1>
+          <p className="hero-sub">Panel privado de Café SofIA</p>
+          <input className="chat-input" type="password" placeholder="Contraseña del panel" value={password} onChange={(event) => setPassword(event.target.value)} />
+          <button className="btn-primary btn-xl" onClick={() => cargarDatos()} disabled={cargando || !password}>
+            {cargando ? "Entrando…" : "Entrar"}
+          </button>
+          {error && <p className="qr-note">{error}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  const transferencias = datos?.transferencias || [];
+  return (
+    <div className="app-root">
+      <div className="screen">
+        <TopBar titulo="Trastienda" onVolver={() => { window.location.href = "/"; }} />
+        <p className="transp-intro">Cafés, insumos, stock y transferencias pendientes.</p>
+        <div className="transp-grid">
+          <div className="tcard">
+            <div className="tcard-label">Cafés</div>
+            {(datos.carta || []).map((item) => <p key={item.id_item}>{item.nombre} · {colones(item.precio)}</p>)}
+          </div>
+          <div className="tcard">
+            <div className="tcard-label">Insumos y stock</div>
+            {(datos.insumos || []).map((item) => <p key={item.id_insumo}>{item.nombre}: {item.stock}</p>)}
+          </div>
+          <div className="tcard">
+            <div className="tcard-label">Transferencias pendientes</div>
+            {transferencias.length === 0 && <p>No hay transferencias pendientes.</p>}
+            {transferencias.map((item) => (
+              <div className="gasto-row" key={item.orderId}>
+                <span>{item.orderId} · {colones(Number(item.monto) || 0)}</span>
+                <span>
+                  <button className="nav-btn" onClick={() => ejecutar("admin_confirm_transfer", { orderId: item.orderId })}>Confirmar</button>
+                  <button className="nav-btn" onClick={() => ejecutar("admin_discard_transfer", { orderId: item.orderId })}>Descartar</button>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+        {error && <p className="qr-note">{error}</p>}
+        <button className="btn-primary btn-xl" onClick={() => cargarDatos()} disabled={cargando}>
+          {cargando ? "Actualizando…" : "Actualizar"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ---------- App principal ----------
 export default function CafeSofiaPrototipo() {
   const [pantalla, setPantalla] = useState("bienvenida");
   const [carrito, setCarrito] = useState([]);
+
+  if (window.location.pathname === "/admin") return <Admin />;
 
   function irInicio() {
     setCarrito([]);
