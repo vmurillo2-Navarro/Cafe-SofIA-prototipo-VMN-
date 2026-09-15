@@ -14,24 +14,13 @@ export default async function handler(request, response) {
 
   try {
     const body = JSON.stringify({ ...request.body, token: backendToken });
-    let backendResponse = await fetch(backendUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body,
-      redirect: 'manual',
-    });
-
-    const redirectUrl = backendResponse.headers.get('location');
-    if (backendResponse.status >= 300 && backendResponse.status < 400 && redirectUrl) {
-      backendResponse = await fetch(redirectUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
-      });
-    }
-
-    const payload = await backendResponse.json();
-    return response.status(backendResponse.ok && payload.ok ? 200 : 502).json(payload);
+    const payload = Buffer.from(body).toString('base64url');
+    const separator = backendUrl.includes('?') ? '&' : '?';
+    const backendResponse = await fetch(
+      `${backendUrl}${separator}api=order&payload=${encodeURIComponent(payload)}`
+    );
+    const responsePayload = await backendResponse.json();
+    return response.status(backendResponse.ok && responsePayload.ok ? 200 : 502).json(responsePayload);
   } catch (error) {
     return response.status(502).json({ ok: false, error: 'No se pudo contactar al backend.' });
   }
