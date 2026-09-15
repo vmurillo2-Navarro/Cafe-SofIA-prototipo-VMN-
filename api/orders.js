@@ -7,12 +7,16 @@ export default async function handler(request, response) {
   if (!backendUrl) {
     return response.status(500).json({ ok: false, error: 'Falta configurar APPS_SCRIPT_URL.' });
   }
+  const backendToken = process.env.APPS_SCRIPT_TOKEN;
+  if (!backendToken) {
+    return response.status(500).json({ ok: false, error: 'Falta configurar APPS_SCRIPT_TOKEN.' });
+  }
 
   try {
     const backendResponse = await fetch(backendUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request.body),
+      body: JSON.stringify({ ...request.body, token: backendToken }),
     });
     const payload = await backendResponse.json();
     return response.status(backendResponse.ok && payload.ok ? 200 : 502).json(payload);
