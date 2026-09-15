@@ -383,7 +383,7 @@ function Pago({ carrito, onConfirmar, onVolver }) {
       {metodo === "transferencia" ? (
         <>
           <p className="qr-hint">Transfiere el total y conserva el comprobante.</p>
-          <div className="qr-box">
+          <div className="qr-box bank-details">
             <p><strong>BAC San José</strong></p>
             <p>Alias: Banco, BAC</p>
             <p>IBAN: CR91010200009291412574</p>
@@ -613,6 +613,8 @@ export default function CafeSofiaPrototipo() {
 
         .qr-hint { color: #B9B6E8; max-width: 340px; margin: 60px 0 20px; }
         .qr-box { background: #EAE9FB; padding: 20px; border-radius: 20px; }
+        .bank-details { color: #0B0A1F; width: min(100%, 360px); box-sizing: border-box; }
+        .bank-details p { margin: 7px 0; }
         .qr-total { font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 700; margin: 16px 0; color: #F4C863; }
         .qr-note { color: #7B78A8; font-size: 12px; margin-top: 10px; }
 
