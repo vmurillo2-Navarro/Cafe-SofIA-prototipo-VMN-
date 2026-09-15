@@ -7,9 +7,9 @@ export default async function handler(request, response) {
   if (!backendUrl) {
     return response.status(500).json({ ok: false, error: 'Falta configurar APPS_SCRIPT_URL.' });
   }
-  const backendToken = process.env.APPS_SCRIPT_TOKEN;
+  const backendToken = process.env.Apps_Script_token;
   if (!backendToken) {
-    return response.status(500).json({ ok: false, error: 'Falta configurar APPS_SCRIPT_TOKEN.' });
+    return response.status(500).json({ ok: false, error: 'Falta configurar Apps_Script_token.' });
   }
 
   try {
