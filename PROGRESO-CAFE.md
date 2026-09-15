@@ -20,5 +20,5 @@ _(Lo importante para retomar. Sin claves ni contraseñas.)_
 - URL de Apps Script: https://script.google.com/macros/s/AKfycbx_yabgOItGrrUDvR00b51JYlRtGOe2jzgk1aZqIpqLxcXfObQpuMsPfx_GnMnwMNPC/exec
 - Acceso público de Apps Script corregido; el endpoint responde con `SofIA · ADEN LAB`.
 - Pendiente — probar una compra real desde la tienda y confirmar que se registra en ventas, caja y stock.
-- Variables elegidas: Vercel `APPS_SCRIPT_URL` y `Apps_Script_token`; Apps Script `API_TOKEN`.
+- Variables elegidas: Vercel `APPS_SCRIPT_URL` y `Apps_Script_token`; Apps Script `API_Token`.
 - Pendiente — pegar la versión protegida de `doPost` en Apps Script y republicar como nueva versión.
