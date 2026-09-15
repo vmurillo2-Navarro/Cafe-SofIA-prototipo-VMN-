@@ -19,3 +19,4 @@
 _(Lo importante para retomar. Sin claves ni contraseñas.)_
 - URL de Apps Script: https://script.google.com/macros/s/AKfycbx_yabgOItGrrUDvR00b51JYlRtGOe2jzgk1aZqIpqLxcXfObQpuMsPfx_GnMnwMNPC/exec
 - Acceso público de Apps Script corregido; el endpoint responde con `SofIA · ADEN LAB`.
+- Pendiente Etapa 4 — pegar en Apps Script el `doPost` y `registrarPedidoReal_` del espejo local, publicar como nueva versión y probar un pedido.
