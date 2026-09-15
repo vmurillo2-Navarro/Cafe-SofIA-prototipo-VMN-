@@ -22,3 +22,4 @@ _(Lo importante para retomar. Sin claves ni contraseñas.)_
 - Compra de prueba completada: la tienda confirmó el pedido y Apps Script registró la venta, caja y stock.
 - Variables elegidas: Vercel `APPS_SCRIPT_URL` y `Apps_Script_token`; Apps Script `API_Token`.
 - Pendiente — pegar la versión protegida de `doPost` en Apps Script y republicar como nueva versión.
+- Transferencia bancaria implementada localmente: BAC San José, alias Banco, BAC; queda pendiente republicar Apps Script y probar el estado pendiente.

@@ -323,6 +323,7 @@ function Pedido({ carrito, setCarrito, onIrPago, onVolver }) {
 function Pago({ carrito, onConfirmar, onVolver }) {
   const total = carrito.reduce((acc, item) => acc + item.precio * item.qty, 0);
   const [pagado, setPagado] = useState(false);
+  const [metodo, setMetodo] = useState("transferencia");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
 
@@ -334,7 +335,7 @@ function Pago({ carrito, onConfirmar, onVolver }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tipo: "pedido_confirmado",
+          tipo: metodo === "transferencia" ? "pedido_transferencia" : "pedido_confirmado",
           referencia: `web-${Date.now()}`,
           items: carrito.map((item) => ({ id: item.id, cantidad: item.qty })),
         }),
@@ -355,8 +356,12 @@ function Pago({ carrito, onConfirmar, onVolver }) {
         <div className="check-circle">
           <Check size={48} color="#0B0A1F" />
         </div>
-        <h2 className="confirm-title">¡Listo, gracias!</h2>
-        <p className="confirm-sub">Tu pedido ya está en preparación. SofIA avisa cuando esté listo para retirar.</p>
+        <h2 className="confirm-title">{metodo === "transferencia" ? "Pedido recibido" : "¡Listo, gracias!"}</h2>
+        <p className="confirm-sub">
+          {metodo === "transferencia"
+            ? "Tu transferencia quedó pendiente de confirmación. Te avisaremos cuando el pago sea validado."
+            : "Tu pedido ya está en preparación. SofIA avisa cuando esté listo para retirar."}
+        </p>
         <button className="btn-primary btn-xl" onClick={onConfirmar}>
           Volver al inicio
         </button>
@@ -366,17 +371,40 @@ function Pago({ carrito, onConfirmar, onVolver }) {
 
   return (
     <div className="screen center">
-      <TopBar titulo="Pagá con QR" onVolver={onVolver} floating />
-      <p className="qr-hint">Escaneá este código con la app de la universidad para pagar desde tu cuenta.</p>
-      <div className="qr-box">
-        <QrCode size={180} color="#0B0A1F" />
+      <TopBar titulo="Elegí cómo pagar" onVolver={onVolver} floating />
+      <div className="payment-methods">
+        <button className={`nav-btn ${metodo === "transferencia" ? "nav-btn-activo" : ""}`} onClick={() => setMetodo("transferencia")}>
+          Transferencia bancaria
+        </button>
+        <button className={`nav-btn ${metodo === "qr" ? "nav-btn-activo" : ""}`} onClick={() => setMetodo("qr")}>
+          QR de prueba
+        </button>
       </div>
+      {metodo === "transferencia" ? (
+        <>
+          <p className="qr-hint">Transfiere el total y conserva el comprobante.</p>
+          <div className="qr-box">
+            <p><strong>BAC San José</strong></p>
+            <p>Alias: Banco, BAC</p>
+            <p>IBAN: CR91010200009291412574</p>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="qr-hint">Escaneá este código con la app de la universidad para pagar desde tu cuenta.</p>
+          <div className="qr-box">
+            <QrCode size={180} color="#0B0A1F" />
+          </div>
+        </>
+      )}
       <div className="qr-total">{colones(total)}</div>
       <button className="btn-primary btn-xl" onClick={confirmarPago} disabled={enviando}>
-        {enviando ? "Confirmando…" : "Simular pago confirmado"}
+        {enviando ? "Enviando…" : metodo === "transferencia" ? "Ya realicé la transferencia" : "Simular pago confirmado"}
       </button>
       {error && <p className="qr-note">No se registró el pedido: {error}</p>}
-      <p className="qr-note">(En la versión real, esta pantalla se actualiza sola al detectar el pago.)</p>
+      <p className="qr-note">
+        {metodo === "transferencia" ? "La venta se registra cuando el administrador confirme el comprobante." : "En la versión real, esta pantalla se actualiza sola al detectar el pago."}
+      </p>
     </div>
   );
 }
