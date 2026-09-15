@@ -12,7 +12,7 @@
 - [x] Etapa 6 · El token entre servidores — HITO 2 — autenticación validada por POST
 - [x] Etapa 7 · Los métodos de pago — transferencia bancaria registrada como pendiente
 - [x] Etapa 8 · El panel de administración: la trastienda — panel /admin funcionando en producción
-- [ ] Etapa 9 · Usar el panel: carta, insumos, stock y transferencias
+- [x] Etapa 9 · Usar el panel: carta, insumos, stock y transferencias — transferencia confirmada y retirada de pendientes
 - [ ] Etapa 10 · SofIA en modo real
 
 ## Notas de contexto
