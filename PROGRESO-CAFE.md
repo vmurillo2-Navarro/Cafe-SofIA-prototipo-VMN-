@@ -10,7 +10,7 @@
 - [x] Etapa 4 · Conectar el frontend con el backend — Vercel y Apps Script responden por POST
 - [x] Etapa 5 · Variables de entorno — nombres configurados en Vercel y Apps Script
 - [x] Etapa 6 · El token entre servidores — HITO 2 — autenticación validada por POST
-- [ ] Etapa 7 · Los métodos de pago
+- [x] Etapa 7 · Los métodos de pago — transferencia bancaria registrada como pendiente
 - [ ] Etapa 8 · El panel de administración: la trastienda
 - [ ] Etapa 9 · Usar el panel: carta, insumos, stock y transferencias
 - [ ] Etapa 10 · SofIA en modo real
@@ -23,3 +23,4 @@ _(Lo importante para retomar. Sin claves ni contraseñas.)_
 - Variables elegidas: Vercel `APPS_SCRIPT_URL` y `Apps_Script_token`; Apps Script `API_Token`.
 - Pendiente — pegar la versión protegida de `doPost` en Apps Script y republicar como nueva versión.
 - Transferencia bancaria implementada localmente: BAC San José, alias Banco, BAC; queda pendiente republicar Apps Script y probar el estado pendiente.
+- Prueba de transferencia completada: pedido recibido y guardado como pendiente.
