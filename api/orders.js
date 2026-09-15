@@ -13,11 +13,23 @@ export default async function handler(request, response) {
   }
 
   try {
-    const backendResponse = await fetch(backendUrl, {
+    const body = JSON.stringify({ ...request.body, token: backendToken });
+    let backendResponse = await fetch(backendUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...request.body, token: backendToken }),
+      body,
+      redirect: 'manual',
     });
+
+    const redirectUrl = backendResponse.headers.get('location');
+    if (backendResponse.status >= 300 && backendResponse.status < 400 && redirectUrl) {
+      backendResponse = await fetch(redirectUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      });
+    }
+
     const payload = await backendResponse.json();
     return response.status(backendResponse.ok && payload.ok ? 200 : 502).json(payload);
   } catch (error) {
