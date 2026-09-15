@@ -323,6 +323,31 @@ function Pedido({ carrito, setCarrito, onIrPago, onVolver }) {
 function Pago({ carrito, onConfirmar, onVolver }) {
   const total = carrito.reduce((acc, item) => acc + item.precio * item.qty, 0);
   const [pagado, setPagado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState("");
+
+  async function confirmarPago() {
+    setEnviando(true);
+    setError("");
+    try {
+      const respuesta = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tipo: "pedido_confirmado",
+          referencia: `web-${Date.now()}`,
+          items: carrito.map((item) => ({ id: item.id, cantidad: item.qty })),
+        }),
+      });
+      const resultado = await respuesta.json();
+      if (!respuesta.ok || !resultado.ok) throw new Error(resultado.error || "No se pudo registrar el pedido.");
+      setPagado(true);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setEnviando(false);
+    }
+  }
 
   if (pagado) {
     return (
@@ -347,9 +372,10 @@ function Pago({ carrito, onConfirmar, onVolver }) {
         <QrCode size={180} color="#0B0A1F" />
       </div>
       <div className="qr-total">{colones(total)}</div>
-      <button className="btn-primary btn-xl" onClick={() => setPagado(true)}>
-        Simular pago confirmado
+      <button className="btn-primary btn-xl" onClick={confirmarPago} disabled={enviando}>
+        {enviando ? "Confirmando…" : "Simular pago confirmado"}
       </button>
+      {error && <p className="qr-note">No se registró el pedido: {error}</p>}
       <p className="qr-note">(En la versión real, esta pantalla se actualiza sola al detectar el pago.)</p>
     </div>
   );
