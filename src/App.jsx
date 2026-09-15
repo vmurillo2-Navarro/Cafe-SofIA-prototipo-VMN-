@@ -564,6 +564,10 @@ function Admin() {
     }
   }
 
+  async function cambiarModoReal(event) {
+    await ejecutar("admin_set_mode_real", { enabled: event.target.checked });
+  }
+
   if (!autenticado) {
     return (
       <div className="app-root">
@@ -582,12 +586,21 @@ function Admin() {
   }
 
   const transferencias = datos?.transferencias || [];
+  const pedidosProveedor = datos?.pedidos_proveedor || [];
   return (
     <div className="app-root">
       <style>{`.app-root{font-family:Lato,sans-serif;background:linear-gradient(180deg,#0B0A1F 0%,#120E33 45%,#0B0A1F 100%);color:#EAE9FB;min-height:100vh;width:100%;display:flex;flex-direction:column}.screen{width:100%;max-width:1100px;box-sizing:border-box;margin:0 auto;padding:28px 32px;position:relative}.topbar{display:flex;align-items:center;gap:12px;margin-bottom:22px}.back-btn{background:rgba(255,255,255,.08);border:0;color:#EAE9FB;width:38px;height:38px;border-radius:50%;cursor:pointer}.topbar-title{font-family:Space Grotesk,sans-serif;font-size:22px;font-weight:700}.transp-intro{color:#B9B6E8;font-size:14px;margin-bottom:18px}.transp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.tcard{background:#141233;border:1px solid rgba(155,92,246,.18);border-radius:18px;padding:18px;min-width:0}.tcard-label{font-family:Space Grotesk,sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#B9B6E8;margin-bottom:12px}.tcard p{margin:8px 0;color:#EAE9FB}.gasto-row{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;padding:10px 0;border-bottom:1px solid #2C2A55}.gasto-row:last-child{border-bottom:0}.nav-btn{background:#1E1A45;border:1px solid rgba(155,92,246,.25);color:#EAE9FB;border-radius:10px;padding:8px 12px;cursor:pointer;font-family:inherit;font-size:12px}.nav-btn:hover{border-color:#9B5CF6}.btn-primary{background:linear-gradient(120deg,#7C3AED,#9B5CF6);color:#fff;border:0;border-radius:999px;font-weight:700;cursor:pointer;padding:12px 20px;margin-top:20px}.btn-xl{font-size:15px;padding:13px 24px}@media(max-width:720px){.screen{padding:20px 16px}.transp-grid{grid-template-columns:1fr}.gasto-row{align-items:flex-start;flex-direction:column}}`}</style>
       <div className="screen">
         <TopBar titulo="Trastienda" onVolver={() => { window.location.href = "/"; }} />
         <p className="transp-intro">Cafés, insumos, stock y transferencias pendientes.</p>
+        <div className="tcard">
+          <div className="tcard-label">Modo real</div>
+          <label className="mode-toggle">
+            <input type="checkbox" checked={Boolean(datos.modo_real)} onChange={cambiarModoReal} disabled={cargando} />
+            <span>{datos.modo_real ? "Activo" : "Apagado"}</span>
+          </label>
+          <p className="qr-note">Apagado = simulador. Activo = ventas y reloj reales.</p>
+        </div>
         <div className="transp-grid">
           <div className="tcard">
             <div className="tcard-label">Cafés</div>
@@ -606,6 +619,19 @@ function Admin() {
                 <span>
                   <button className="nav-btn" onClick={() => ejecutar("admin_confirm_transfer", { orderId: item.orderId })}>Confirmar</button>
                   <button className="nav-btn" onClick={() => ejecutar("admin_discard_transfer", { orderId: item.orderId })}>Descartar</button>
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="tcard">
+            <div className="tcard-label">Pedidos al proveedor</div>
+            {pedidosProveedor.length === 0 && <p>No hay pedidos pendientes.</p>}
+            {pedidosProveedor.map((item) => (
+              <div className="gasto-row" key={item.pedido_id}>
+                <span>{item.nombre} · {item.cantidad} {item.unidad} · {colones(Number(item.costo_total) || 0)}</span>
+                <span>
+                  <button className="nav-btn" onClick={() => ejecutar("admin_confirm_supplier_order", { pedidoId: item.pedido_id, cantidadRecibida: item.cantidad })}>Recibido</button>
+                  <button className="nav-btn" onClick={() => ejecutar("admin_cancel_supplier_order", { pedidoId: item.pedido_id })}>Cancelar</button>
                 </span>
               </div>
             ))}
