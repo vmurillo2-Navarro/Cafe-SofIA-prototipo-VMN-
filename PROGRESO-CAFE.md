@@ -18,4 +18,4 @@
 ## Notas de contexto
 _(Lo importante para retomar. Sin claves ni contraseñas.)_
 - URL de Apps Script: https://script.google.com/macros/s/AKfycbx_yabgOItGrrUDvR00b51JYlRtGOe2jzgk1aZqIpqLxcXfObQpuMsPfx_GnMnwMNPC/exec
-- Pendiente — la URL de Apps Script redirige a inicio de sesión de Google; revisar acceso público de la implementación antes de conectarla con Vercel.
+- Acceso público de Apps Script corregido; el endpoint responde con `SofIA · ADEN LAB`.
