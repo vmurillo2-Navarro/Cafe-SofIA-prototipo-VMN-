@@ -568,6 +568,17 @@ function Admin() {
     await ejecutar("admin_set_mode_real", { enabled: event.target.checked });
   }
 
+  async function confirmarPedidoProveedor(item) {
+    const cantidad = window.prompt(`Cantidad recibida de ${item.nombre}:`, String(item.cantidad));
+    if (cantidad === null) return;
+    const cantidadRecibida = Number(cantidad);
+    if (!Number.isFinite(cantidadRecibida) || cantidadRecibida < 0) {
+      setError("La cantidad recibida debe ser un número igual o mayor que cero.");
+      return;
+    }
+    await ejecutar("admin_confirm_supplier_order", { pedidoId: item.pedido_id, cantidadRecibida });
+  }
+
   if (!autenticado) {
     return (
       <div className="app-root">
@@ -630,7 +641,7 @@ function Admin() {
               <div className="gasto-row" key={item.pedido_id}>
                 <span>{item.nombre} · {item.cantidad} {item.unidad} · {colones(Number(item.costo_total) || 0)}</span>
                 <span>
-                  <button className="nav-btn" onClick={() => ejecutar("admin_confirm_supplier_order", { pedidoId: item.pedido_id, cantidadRecibida: item.cantidad })}>Recibido</button>
+                  <button className="nav-btn" onClick={() => confirmarPedidoProveedor(item)}>Recibido</button>
                   <button className="nav-btn" onClick={() => ejecutar("admin_cancel_supplier_order", { pedidoId: item.pedido_id })}>Cancelar</button>
                 </span>
               </div>
