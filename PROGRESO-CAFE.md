@@ -7,7 +7,7 @@
 
 ## Clase 6 · Conectar con el mundo real
 - [x] Etapa 3 · La arquitectura, como un restaurante — identificó frontend y backend
-- [ ] Etapa 4 · Conectar el frontend con el backend
+- [x] Etapa 4 · Conectar el frontend con el backend — Vercel y Apps Script responden por POST
 - [ ] Etapa 5 · Variables de entorno
 - [ ] Etapa 6 · El token entre servidores — HITO 2
 - [ ] Etapa 7 · Los métodos de pago
@@ -19,4 +19,4 @@
 _(Lo importante para retomar. Sin claves ni contraseñas.)_
 - URL de Apps Script: https://script.google.com/macros/s/AKfycbx_yabgOItGrrUDvR00b51JYlRtGOe2jzgk1aZqIpqLxcXfObQpuMsPfx_GnMnwMNPC/exec
 - Acceso público de Apps Script corregido; el endpoint responde con `SofIA · ADEN LAB`.
-- Pendiente Etapa 4 — pegar en Apps Script el `doPost` y `registrarPedidoReal_` del espejo local, publicar como nueva versión y probar un pedido.
+- Pendiente — probar una compra real desde la tienda y confirmar que se registra en ventas, caja y stock.
