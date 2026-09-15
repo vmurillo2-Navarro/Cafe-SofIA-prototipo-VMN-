@@ -6,7 +6,7 @@
 - [x] Etapa 2 · Vercel — URL pública — https://cafe-sof-ia-prototipo-vmn.vercel.app/
 
 ## Clase 6 · Conectar con el mundo real
-- [ ] Etapa 3 · La arquitectura, como un restaurante
+- [x] Etapa 3 · La arquitectura, como un restaurante — identificó frontend y backend
 - [ ] Etapa 4 · Conectar el frontend con el backend
 - [ ] Etapa 5 · Variables de entorno
 - [ ] Etapa 6 · El token entre servidores — HITO 2
