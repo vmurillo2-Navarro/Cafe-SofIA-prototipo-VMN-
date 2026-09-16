@@ -3,12 +3,12 @@ import { Mic, Send, Coffee, ShoppingBag, BarChart3, QrCode, ArrowLeft, Sparkles,
 
 // ---------- Datos de ejemplo (placeholder, no reales) ----------
 const MENU = [
-  { id: "espresso", nombre: "Espresso", precio: 900, cat: "Café", stock: 42, desc: "Cápsula intensa, un shot puro." },
-  { id: "capuchino", nombre: "Capuchino", precio: 1400, cat: "Café", stock: 3, desc: "Espresso, leche vaporizada y espuma." },
-  { id: "latte", nombre: "Latte", precio: 1400, cat: "Café", stock: 27, desc: "Suave, con más leche que espuma." },
-  { id: "mch", nombre: "Mocha", precio: 1600, cat: "Café", stock: 15, desc: "Espresso, chocolate y leche vaporizada." },
-  { id: "des", nombre: "Espresso descafeinado", precio: 950, cat: "Café", stock: 18, desc: "Todo el ritual, sin cafeína." },
-  { id: "che", nombre: "Chocolate caliente", precio: 1300, cat: "Otros", stock: 20, desc: "Para los días de lluvia en el campus." },
+  { id: "espresso", nombre: "Espresso", precio: 900, cat: "Café", stock: 100, desc: "Cápsula intensa, un shot puro." },
+  { id: "capuchino", nombre: "Capuchino", precio: 1400, cat: "Café", stock: 100, desc: "Espresso, leche vaporizada y espuma." },
+  { id: "latte", nombre: "Latte", precio: 1400, cat: "Café", stock: 100, desc: "Suave, con más leche que espuma." },
+  { id: "mch", nombre: "Mocha", precio: 1600, cat: "Café", stock: 10, desc: "Espresso, chocolate y leche vaporizada." },
+  { id: "des", nombre: "Espresso descafeinado", precio: 950, cat: "Café", stock: 10, desc: "Todo el ritual, sin cafeína." },
+  { id: "che", nombre: "Chocolate caliente", precio: 1300, cat: "Otros", stock: 10, desc: "Para los días de lluvia en el campus." },
 ];
 
 const VENTAS_HOY = [
