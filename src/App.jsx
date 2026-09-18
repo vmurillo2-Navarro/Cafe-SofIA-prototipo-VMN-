@@ -85,6 +85,14 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
   const [seleccion, setSeleccion] = useState(null);
   const scrollRef = useRef(null);
 
+  function registrarInteraccion(tipo, detalle) {
+    fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tipo: "registrar_interaccion", interaccion: { tipo, detalle } }),
+    }).catch(() => {});
+  }
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [mensajes]);
@@ -92,6 +100,7 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
   const total = carrito.reduce((acc, item) => acc + item.precio * item.qty, 0);
 
   function agregarAlCarrito(producto) {
+    registrarInteraccion("seleccion_producto", producto.id);
     setCarrito((prev) => {
       const existe = prev.find((p) => p.id === producto.id);
       if (existe) return prev.map((p) => (p.id === producto.id ? { ...p, qty: p.qty + 1 } : p));
@@ -119,6 +128,7 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
     if (!input.trim()) return;
     const texto = input.trim();
     const textoLower = texto.toLowerCase();
+    registrarInteraccion("mensaje_cliente", texto);
     setMensajes((m) => [...m, { de: "user", texto }]);
     setInput("");
     setEstadoOrbe("pensando");
