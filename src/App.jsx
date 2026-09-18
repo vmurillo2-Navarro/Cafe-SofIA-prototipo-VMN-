@@ -162,7 +162,7 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
       const esPreguntaIdentidad = /eres una persona|sos una persona|eres humana|eres un chatbot|eres ia|eres una ia|qué eres|que eres|quién eres|quien eres/.test(
         textoLower
       );
-      const esPreguntaProyecto = /cómo funcionas|como funcionas|cómo estás hecha|como estas hecha|cómo te construyeron|como te construyeron|cómo funciona el proyecto|como funciona el proyecto|qué hay detrás|que hay detras|qué pasa con mis datos|que pasa con mis datos|cómo tomas decisiones|como tomas decisiones/.test(
+      const esPreguntaProyecto = /cómo funcionas|como funcionas|cómo estás hecha|como estas hecha|cómo te construyeron|como te construyeron|cómo funciona el proyecto|como funciona el proyecto|explica(?:me)? tu proyecto|explícame tu proyecto|qué hay detrás|que hay detras|qué pasa con mis datos|que pasa con mis datos|cómo tomas decisiones|como tomas decisiones|cómo trabaja sofia|como trabaja sofia|qué puedes hacer|que puedes hacer|qué haces exactamente|que haces exactamente|cómo está construida|como esta construida|cómo fue creada|como fue creada|transparencia/.test(
         textoLower
       );
       const esPreguntaError = /puedes equivocarte|podés equivocarte|inventas respuestas|puedes mentir/.test(textoLower);
