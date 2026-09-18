@@ -62,7 +62,7 @@ function Bienvenida({ onStart }) {
   return (
     <div className="screen center">
       <div className="stars" />
-      <Orbe estado="idle" size={140} />
+      <div className="welcome-night-image" role="img" aria-label="Cielo nocturno estrellado sobre un café" />
       <h1 className="hero-title">
         Café <span className="accent-gold">SofIA</span>
       </h1>
@@ -185,6 +185,10 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
       const esPreguntaObjetivo = /cual es tu objetivo|que objetivo perseguis|como te adaptas|te adaptas al contexto|si falta stock|que harias si falta stock/.test(
         textoPlano
       );
+      const esPreguntaEmpujeFreno = /empuje|freno|limite|límites|como evitas pasarte|cómo evitas pasarte/.test(textoPlano);
+      const esPreguntaTransparenciaTecnica = /modelo|cerebro|motor|tecnologia|tecnología|no sabes|no puedes saber|datos trabajas|eres transparente/.test(
+        textoPlano
+      );
       const esPreguntaError = /puedes equivocarte|podés equivocarte|inventas respuestas|puedes mentir/.test(textoLower);
       const esPreguntaHumano = /hablar con una persona|hablar con alguien|hablar con un humano|atención humana/.test(
         textoLower
@@ -245,6 +249,28 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
             de: "sofia",
             texto:
               "Mi objetivo declarado es mantener Café SofIA operativo: atender pedidos reales, cuidar el stock y la caja, y ser transparente cuando no tengo un dato. Me adapto al contexto consultando las ventas, el inventario, la caja, los pedidos al proveedor y las tareas pendientes. Si falta stock, no prometo ese producto: priorizo una reposición prudente o te informo la situación.",
+          },
+        ]);
+        setEstadoOrbe("hablando");
+        setTimeout(() => setEstadoOrbe("idle"), 900);
+      } else if (esPreguntaEmpujeFreno) {
+        setMensajes((m) => [
+          ...m,
+          {
+            de: "sofia",
+            texto:
+              "Cada indicador de empuje tiene un freno. Las ventas y la oportunidad de reponer me empujan a mantener el café operativo; el stock bajo, la caja disponible, los pedidos pendientes y los límites de frecuencia de campañas frenan mis acciones. Si un freno se activa, priorizo cuidar el sistema antes que crecer a cualquier costo.",
+          },
+        ]);
+        setEstadoOrbe("hablando");
+        setTimeout(() => setEstadoOrbe("idle"), 900);
+      } else if (esPreguntaTransparenciaTecnica) {
+        setMensajes((m) => [
+          ...m,
+          {
+            de: "sofia",
+            texto:
+              "Soy SofIA: una aplicación web conectada a Google Apps Script y Google Sheets. Mi cerebro actual es OpenAI con gpt-4o-mini. Para responder sobre carta, stock, ventas o caja consulto las hojas y herramientas reales. No sé lo que no está en esas fuentes, no puedo confirmar un pago por mi cuenta, no preparo alimentos y debo decirte cuando un dato no está disponible en vez de inventarlo.",
           },
         ]);
         setEstadoOrbe("hablando");
@@ -441,7 +467,7 @@ function Pago({ carrito, onConfirmar, onVolver }) {
   const total = carrito.reduce((acc, item) => acc + item.precio * item.qty, 0);
   const [pagado, setPagado] = useState(false);
   const [metodo, setMetodo] = useState("transferencia");
-  const [cliente, setCliente] = useState({ nombre: "", telefono: "", email: "" });
+  const [cliente, setCliente] = useState({ nombre: "", telefono: "", email: "", marketing_consentimiento: false });
   const [clienteReconocido, setClienteReconocido] = useState(null);
   const [buscandoCliente, setBuscandoCliente] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -535,6 +561,14 @@ function Pago({ carrito, onConfirmar, onVolver }) {
         {buscandoCliente && <span className="qr-note">Buscando tus datos…</span>}
         <input className="chat-input" type="tel" placeholder="Teléfono" value={cliente.telefono} onChange={(event) => setCliente({ ...cliente, telefono: event.target.value })} />
         <input className="chat-input" type="email" placeholder="Correo electrónico" value={cliente.email} onChange={(event) => setCliente({ ...cliente, email: event.target.value })} />
+        <label className="qr-note" style={{ display: "flex", gap: 8, alignItems: "flex-start", textAlign: "left" }}>
+          <input
+            type="checkbox"
+            checked={cliente.marketing_consentimiento}
+            onChange={(event) => setCliente({ ...cliente, marketing_consentimiento: event.target.checked })}
+          />
+          Quiero recibir novedades y recordatorios de Café SofIA por correo.
+        </label>
       </div>
       {metodo === "transferencia" ? (
         <>
@@ -764,6 +798,7 @@ function Admin() {
 
   const transferencias = datos?.transferencias || [];
   const pedidosProveedor = datos?.pedidos_proveedor || [];
+  const reposicionRecomendada = datos?.reposicion_recomendada || [];
   return (
     <div className="app-root">
       <style>{`.app-root{font-family:Lato,sans-serif;background:linear-gradient(180deg,#0B0A1F 0%,#120E33 45%,#0B0A1F 100%);color:#EAE9FB;min-height:100vh;width:100%;display:flex;flex-direction:column}.screen{width:100%;max-width:1100px;box-sizing:border-box;margin:0 auto;padding:28px 32px;position:relative}.topbar{display:flex;align-items:center;gap:12px;margin-bottom:22px}.back-btn{background:rgba(255,255,255,.08);border:0;color:#EAE9FB;width:38px;height:38px;border-radius:50%;cursor:pointer}.topbar-title{font-family:Space Grotesk,sans-serif;font-size:22px;font-weight:700}.transp-intro{color:#B9B6E8;font-size:14px;margin-bottom:18px}.transp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.tcard{background:#141233;border:1px solid rgba(155,92,246,.18);border-radius:18px;padding:18px;min-width:0}.tcard-label{font-family:Space Grotesk,sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#B9B6E8;margin-bottom:12px}.tcard p{margin:8px 0;color:#EAE9FB}.gasto-row{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;padding:10px 0;border-bottom:1px solid #2C2A55}.gasto-row:last-child{border-bottom:0}.nav-btn{background:#1E1A45;border:1px solid rgba(155,92,246,.25);color:#EAE9FB;border-radius:10px;padding:8px 12px;cursor:pointer;font-family:inherit;font-size:12px}.nav-btn:hover{border-color:#9B5CF6}.btn-primary{background:linear-gradient(120deg,#7C3AED,#9B5CF6);color:#fff;border:0;border-radius:999px;font-weight:700;cursor:pointer;padding:12px 20px;margin-top:20px}.btn-xl{font-size:15px;padding:13px 24px}@media(max-width:720px){.screen{padding:20px 16px}.transp-grid{grid-template-columns:1fr}.gasto-row{align-items:flex-start;flex-direction:column}}`}</style>
@@ -794,6 +829,21 @@ function Admin() {
                 </p>
               );
             })}
+          </div>
+          <div className="tcard">
+            <div className="tcard-label">Reposición recomendada</div>
+            {reposicionRecomendada.length === 0 && <p>No hay insumos nuevos para pedir.</p>}
+            {reposicionRecomendada.map((item) => (
+              <div className="gasto-row" key={item.id_insumo}>
+                <span>{item.nombre}: pedir {item.cantidad_sugerida} unidades</span>
+                <span>stock {item.stock}/{item.umbral_min}</span>
+              </div>
+            ))}
+            {reposicionRecomendada.length > 0 && (
+              <button className="btn-primary" onClick={() => ejecutar("admin_run_restock", {})} disabled={cargando || !datos.modo_real}>
+                {datos.modo_real ? "Solicitar reposición" : "Activar modo real para pedir"}
+              </button>
+            )}
           </div>
           <div className="tcard">
             <div className="tcard-label">Transferencias pendientes</div>
@@ -884,6 +934,22 @@ export default function CafeSofiaPrototipo() {
         }
         .screen { flex: 1; display: flex; flex-direction: column; padding: 28px 32px; position: relative; overflow-y: auto; }
         .screen.center { align-items: center; justify-content: center; text-align: center; gap: 14px; }
+
+        .welcome-night-image {
+          width: min(72vw, 300px);
+          height: min(42vw, 180px);
+          min-height: 150px;
+          border-radius: 22px;
+          background-image: linear-gradient(180deg, rgba(8, 9, 31, 0.08), rgba(8, 9, 31, 0.38)), url("https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=900&q=85");
+          background-position: center;
+          background-size: cover;
+          box-shadow: 0 18px 48px rgba(0, 0, 0, 0.38), 0 0 28px rgba(244, 200, 99, 0.18);
+          animation: welcome-image-in 700ms ease-out both;
+        }
+        @keyframes welcome-image-in {
+          from { opacity: 0; transform: translateY(10px) scale(0.97); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
 
         .hero-title { font-family: 'Space Grotesk', sans-serif; font-size: 44px; font-weight: 700; margin: 10px 0 0; }
         .accent-gold { color: #F4C863; }
