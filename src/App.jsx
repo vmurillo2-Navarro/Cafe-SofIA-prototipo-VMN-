@@ -84,6 +84,7 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
   const [estadoOrbe, setEstadoOrbe] = useState("idle");
   const [seleccion, setSeleccion] = useState(null);
   const [esperandoNombre, setEsperandoNombre] = useState(false);
+  const esperandoNombreRef = useRef(false);
   const scrollRef = useRef(null);
 
   function registrarInteraccion(tipo, detalle) {
@@ -162,10 +163,10 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
       const palabrasNombre = textoPlano.split(" ");
       const presentacion = textoPlano.match(/^(?:me llamo|soy)\s+([a-záéíóúüñ]+(?:\s+[a-záéíóúüñ]+){0,2})$/i);
       const nombreDicho = presentacion ? presentacion[1] : textoPlano;
-      const esNombre = esperandoNombre
+      const esNombre = esperandoNombreRef.current
         && (Boolean(presentacion) || (palabrasNombre.length <= 3
           && palabrasNombre.every((palabra) => /^[a-záéíóúüñ]+$/i.test(palabra))))
-        && !menu.some((producto) => nombreDicho.includes(producto.nombre.toLowerCase().split(" ")[0]));
+        && !menu.some((producto) => nombreDicho === producto.nombre.toLowerCase());
       const esPreguntaDeStock = /stock|queda|disponib|tenes|hay caf|tipos de caf|que caf/.test(
         textoLower
       );
@@ -188,6 +189,7 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
       const match = menu.find((p) => textoLower.includes(p.nombre.toLowerCase().split(" ")[0]));
 
       if (esSaludo) {
+        esperandoNombreRef.current = true;
         setEsperandoNombre(true);
         setMensajes((m) => [
           ...m,
@@ -199,6 +201,7 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
         setEstadoOrbe("hablando");
         setTimeout(() => setEstadoOrbe("idle"), 900);
       } else if (esNombre) {
+        esperandoNombreRef.current = false;
         setEsperandoNombre(false);
         const nombre = nombreDicho.split(" ").map((palabra) => palabra.charAt(0).toUpperCase() + palabra.slice(1)).join(" ");
         setMensajes((m) => [
