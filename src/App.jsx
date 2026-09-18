@@ -159,6 +159,9 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
       const esPreguntaDeRecomendacion = /recomend|cuál me|cual me|qué me sugerís|que me sugeris|clima|calor|frío|frio|lluv/.test(
         textoLower
       );
+      const esSaludo = /^(hola|buenas|buenos días|buenos dias|buenas tardes|buenas noches|hey)\s*(sofia|sofía)?[!,.\s]*$/.test(
+        textoLower
+      );
       const esPreguntaIdentidad = /eres una persona|sos una persona|eres humana|eres un chatbot|eres ia|eres una ia|qué eres|que eres|quién eres|quien eres/.test(
         textoLower
       );
@@ -171,7 +174,17 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
       );
       const match = menu.find((p) => textoLower.includes(p.nombre.toLowerCase().split(" ")[0]));
 
-      if (esPreguntaIdentidad) {
+      if (esSaludo) {
+        setMensajes((m) => [
+          ...m,
+          {
+            de: "sofia",
+            texto: "¡Hola! Qué lindo recibirte en Café SofIA. ¿Con quién tengo el gusto? Así te atiendo como corresponde.",
+          },
+        ]);
+        setEstadoOrbe("hablando");
+        setTimeout(() => setEstadoOrbe("idle"), 900);
+      } else if (esPreguntaIdentidad) {
         setMensajes((m) => [
           ...m,
           {
