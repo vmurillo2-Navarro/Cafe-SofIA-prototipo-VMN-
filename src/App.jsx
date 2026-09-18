@@ -97,6 +97,25 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [mensajes]);
 
+  useEffect(() => {
+    const ultimo = mensajes[mensajes.length - 1];
+    if (!ultimo || ultimo.de !== "sofia" || !window.speechSynthesis) return;
+    const decir = () => {
+      const voces = window.speechSynthesis.getVoices();
+      const voz = voces.find((item) => /^es(-|_)/i.test(item.lang) && /female|mujer|paulina|monica|luciana/i.test(item.name))
+        || voces.find((item) => /^es(-|_)/i.test(item.lang));
+      const mensaje = new SpeechSynthesisUtterance(ultimo.texto);
+      mensaje.lang = voz?.lang || "es-CR";
+      mensaje.rate = 0.96;
+      mensaje.pitch = 1.08;
+      mensaje.volume = 1;
+      if (voz) mensaje.voice = voz;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(mensaje);
+    };
+    decir();
+  }, [mensajes]);
+
   const total = carrito.reduce((acc, item) => acc + item.precio * item.qty, 0);
 
   function agregarAlCarrito(producto) {
@@ -124,9 +143,9 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
     }, 500);
   }
 
-  function enviarTexto() {
-    if (!input.trim()) return;
-    const texto = input.trim();
+  function enviarTexto(textoEntrada = input) {
+    if (!textoEntrada.trim()) return;
+    const texto = textoEntrada.trim();
     const textoLower = texto.toLowerCase();
     registrarInteraccion("mensaje_cliente", texto);
     setMensajes((m) => [...m, { de: "user", texto }]);
@@ -228,6 +247,23 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
     }, 700);
   }
 
+  function hablarConSofia() {
+    const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Reconocimiento) {
+      setMensajes((m) => [...m, { de: "sofia", texto: "Tu navegador no habilita el micrófono. Puedes escribirme y te responderé igual." }]);
+      return;
+    }
+    const reconocimiento = new Reconocimiento();
+    reconocimiento.lang = "es-CR";
+    reconocimiento.interimResults = false;
+    reconocimiento.maxAlternatives = 1;
+    setEstadoOrbe("escuchando");
+    reconocimiento.onresult = (event) => enviarTexto(event.results[0][0].transcript);
+    reconocimiento.onerror = () => setEstadoOrbe("idle");
+    reconocimiento.onend = () => setEstadoOrbe("idle");
+    reconocimiento.start();
+  }
+
   function agregarAlCarritoDesdeTexto(producto) {
     setCarrito((prev) => {
       const existe = prev.find((p) => p.id === producto.id);
@@ -264,7 +300,7 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
             ))}
           </div>
           <div className="chat-input-row">
-            <button className="mic-btn" title="Hablarle a SofIA (demo)">
+            <button className="mic-btn" title="Hablarle a SofIA" onClick={hablarConSofia}>
               <Mic size={20} />
             </button>
             <input
