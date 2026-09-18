@@ -83,6 +83,7 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
   const [input, setInput] = useState("");
   const [estadoOrbe, setEstadoOrbe] = useState("idle");
   const [seleccion, setSeleccion] = useState(null);
+  const [esperandoNombre, setEsperandoNombre] = useState(false);
   const scrollRef = useRef(null);
 
   function registrarInteraccion(tipo, detalle) {
@@ -158,15 +159,13 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
         .replace(/[¿?¡!,.]/g, " ")
         .replace(/\s+/g, " ")
         .trim();
-      const ultimoMensaje = mensajes[mensajes.length - 1];
-      const esperaNombre = ultimoMensaje?.de === "sofia" && /con quien tengo el gusto|decime tu nombre/.test(
-        ultimoMensaje.texto.toLowerCase()
-      );
       const palabrasNombre = textoPlano.split(" ");
-      const esNombre = esperaNombre
-        && palabrasNombre.length <= 3
-        && palabrasNombre.every((palabra) => /^[a-záéíóúüñ]+$/i.test(palabra))
-        && !menu.some((producto) => textoPlano.includes(producto.nombre.toLowerCase().split(" ")[0]));
+      const presentacion = textoPlano.match(/^(?:me llamo|soy)\s+([a-záéíóúüñ]+(?:\s+[a-záéíóúüñ]+){0,2})$/i);
+      const nombreDicho = presentacion ? presentacion[1] : textoPlano;
+      const esNombre = esperandoNombre
+        && (Boolean(presentacion) || (palabrasNombre.length <= 3
+          && palabrasNombre.every((palabra) => /^[a-záéíóúüñ]+$/i.test(palabra))))
+        && !menu.some((producto) => nombreDicho.includes(producto.nombre.toLowerCase().split(" ")[0]));
       const esPreguntaDeStock = /stock|queda|disponib|tenes|hay caf|tipos de caf|que caf/.test(
         textoLower
       );
@@ -189,6 +188,7 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
       const match = menu.find((p) => textoLower.includes(p.nombre.toLowerCase().split(" ")[0]));
 
       if (esSaludo) {
+        setEsperandoNombre(true);
         setMensajes((m) => [
           ...m,
           {
@@ -199,7 +199,8 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
         setEstadoOrbe("hablando");
         setTimeout(() => setEstadoOrbe("idle"), 900);
       } else if (esNombre) {
-        const nombre = palabrasNombre.map((palabra) => palabra.charAt(0).toUpperCase() + palabra.slice(1)).join(" ");
+        setEsperandoNombre(false);
+        const nombre = nombreDicho.split(" ").map((palabra) => palabra.charAt(0).toUpperCase() + palabra.slice(1)).join(" ");
         setMensajes((m) => [
           ...m,
           {
