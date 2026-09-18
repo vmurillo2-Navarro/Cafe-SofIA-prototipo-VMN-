@@ -152,16 +152,21 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
     setInput("");
     setEstadoOrbe("pensando");
     setTimeout(() => {
-      const esPreguntaDeStock = /stock|queda|disponib|tenés|tenes|hay caf|tipos de caf|qué caf|que caf/.test(
+      const textoPlano = textoLower
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[¿?¡!,.]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      const esPreguntaDeStock = /stock|queda|disponib|tenes|hay caf|tipos de caf|que caf/.test(
         textoLower
       );
       const esPreguntaDeMenu = /menú|menu|carta|qué opciones|que opciones|qué vend|que vend/.test(textoLower);
       const esPreguntaDeRecomendacion = /recomend|cuál me|cual me|qué me sugerís|que me sugeris|clima|calor|frío|frio|lluv/.test(
         textoLower
       );
-      const esSaludo = /^(hola|buenas|buenos días|buenos dias|buenas tardes|buenas noches|hey)\s*(sofia|sofía)?[!,.\s]*$/.test(
-        textoLower
-      );
+      const esSaludo = /^(hola|buenas|buenos dias|buenas tardes|buenas noches|hey)( sofia)?(?: soy .+)?$/.test(textoPlano)
+        || textoPlano.startsWith("hola sofia ");
       const esPreguntaIdentidad = /eres una persona|sos una persona|eres humana|eres un chatbot|eres ia|eres una ia|qué eres|que eres|quién eres|quien eres/.test(
         textoLower
       );
