@@ -162,6 +162,9 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
       const esPreguntaIdentidad = /eres una persona|sos una persona|eres humana|eres un chatbot|eres ia|eres una ia|qué eres|que eres|quién eres|quien eres/.test(
         textoLower
       );
+      const esPreguntaProyecto = /cómo funcionas|como funcionas|cómo estás hecha|como estas hecha|cómo te construyeron|como te construyeron|cómo funciona el proyecto|como funciona el proyecto|qué hay detrás|que hay detras|qué pasa con mis datos|que pasa con mis datos|cómo tomas decisiones|como tomas decisiones/.test(
+        textoLower
+      );
       const esPreguntaError = /puedes equivocarte|podés equivocarte|inventas respuestas|puedes mentir/.test(textoLower);
       const esPreguntaHumano = /hablar con una persona|hablar con alguien|hablar con un humano|atención humana/.test(
         textoLower
@@ -175,6 +178,17 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
             de: "sofia",
             texto:
               "Soy SofIA, una inteligencia artificial. No soy una persona, aunque me encanta charlar como si lo fuera. Tomo pedidos y gestiono el cobro; el café lo prepara siempre alguien del campus.",
+          },
+        ]);
+        setEstadoOrbe("hablando");
+        setTimeout(() => setEstadoOrbe("idle"), 900);
+      } else if (esPreguntaProyecto) {
+        setMensajes((m) => [
+          ...m,
+          {
+            de: "sofia",
+            texto:
+              "Soy la interfaz de un proyecto de café con IA. La web muestra la carta y recibe tu pedido; un backend seguro consulta el inventario real, registra ventas e interacciones y conecta el chat con un modelo de lenguaje. Yo no invento stock ni precios: para esos datos consulto el sistema. Las claves quedan en el servidor, y una persona del campus prepara y entrega cada café.",
           },
         ]);
         setEstadoOrbe("hablando");
@@ -509,6 +523,16 @@ function Transparencia({ menu, onVolver }) {
         Café SofIA opera solo, sin caja registradora tradicional. Esta pantalla es pública: cualquiera puede ver en
         tiempo real cómo van las ventas, el inventario y los gastos del café.
       </p>
+      <div className="tcard transp-project-card">
+        <div className="tcard-label">Cómo funciona el proyecto</div>
+        <div className="project-steps">
+          <div><strong>1. La web</strong><span>Muestra la carta, consulta disponibilidad y recibe pedidos.</span></div>
+          <div><strong>2. SofIA</strong><span>Conversa, explica el sistema y consulta datos reales antes de responder.</span></div>
+          <div><strong>3. El backend</strong><span>Registra ventas, clientes, interacciones, stock y agenda en el sistema operativo del café.</span></div>
+          <div><strong>4. El equipo</strong><span>Confirma pagos, recibe reposiciones y prepara cada producto. La IA no manipula alimentos.</span></div>
+        </div>
+        <p className="project-note">Las claves de conexión no se exponen en el navegador. Si un dato no está disponible, SofIA debe decirlo en lugar de inventarlo.</p>
+      </div>
       <div className="transp-grid">
         <div className="tcard">
           <div className="tcard-label">Ventas de hoy</div>
@@ -573,7 +597,7 @@ function Transparencia({ menu, onVolver }) {
           </div>
         </div>
       </div>
-      <p className="transp-footer">Datos de ejemplo para este prototipo — en producción se conectan a la operación real del café.</p>
+      <p className="transp-footer">Los datos operativos se consultan desde el sistema del café; la preparación y las decisiones humanas siguen siendo responsabilidad del equipo.</p>
     </div>
   );
 }
@@ -866,6 +890,12 @@ export default function CafeSofiaPrototipo() {
         .confirm-sub { color: #B9B6E8; max-width: 320px; }
 
         .transp-intro { color: #B9B6E8; font-size: 14px; max-width: 640px; margin-bottom: 18px; }
+        .transp-project-card { margin-bottom: 16px; }
+        .project-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .project-steps div { display: flex; flex-direction: column; gap: 5px; padding-right: 8px; }
+        .project-steps strong { color: #F4C863; font-size: 13px; }
+        .project-steps span, .project-note { color: #9C9AC9; font-size: 12px; line-height: 1.45; }
+        .project-note { border-top: 1px solid #221E48; margin: 14px 0 0; padding-top: 12px; }
         .transp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .tcard { background: #141233; border: 1px solid rgba(155,92,246,0.18); border-radius: 18px; padding: 16px; }
         .tcard-label { font-family: 'Space Grotesk', sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #B9B6E8; margin-bottom: 8px; }
@@ -895,6 +925,7 @@ export default function CafeSofiaPrototipo() {
 
         @media (max-width: 720px) {
           .pedido-layout { grid-template-columns: 1fr; }
+          .project-steps { grid-template-columns: 1fr 1fr; }
           .transp-grid { grid-template-columns: 1fr; }
         }
       `}</style>
