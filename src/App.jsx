@@ -324,10 +324,16 @@ function Pago({ carrito, onConfirmar, onVolver }) {
   const total = carrito.reduce((acc, item) => acc + item.precio * item.qty, 0);
   const [pagado, setPagado] = useState(false);
   const [metodo, setMetodo] = useState("transferencia");
+  const [cliente, setCliente] = useState({ nombre: "", telefono: "", email: "" });
+  const [clienteReconocido, setClienteReconocido] = useState(null);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
 
   async function confirmarPago() {
+    if (!cliente.nombre.trim() || !cliente.telefono.trim() || !cliente.email.trim()) {
+      setError("Completa tu nombre, teléfono y correo para registrar tu pedido.");
+      return;
+    }
     setEnviando(true);
     setError("");
     try {
@@ -338,10 +344,12 @@ function Pago({ carrito, onConfirmar, onVolver }) {
           tipo: metodo === "transferencia" ? "pedido_transferencia" : "pedido_confirmado",
           referencia: `web-${Date.now()}`,
           items: carrito.map((item) => ({ id: item.id, cantidad: item.qty })),
+          cliente,
         }),
       });
       const resultado = await respuesta.json();
       if (!respuesta.ok || !resultado.ok) throw new Error(resultado.error || "No se pudo registrar el pedido.");
+      setClienteReconocido(resultado.cliente || resultado.pedido?.cliente || null);
       setPagado(true);
     } catch (requestError) {
       setError(requestError.message);
@@ -359,8 +367,8 @@ function Pago({ carrito, onConfirmar, onVolver }) {
         <h2 className="confirm-title">{metodo === "transferencia" ? "Pedido recibido" : "¡Listo, gracias!"}</h2>
         <p className="confirm-sub">
           {metodo === "transferencia"
-            ? "Tu transferencia quedó pendiente de confirmación. Te avisaremos cuando el pago sea validado."
-            : "Tu pedido ya está en preparación. SofIA avisa cuando esté listo para retirar."}
+            ? `Tu transferencia quedó pendiente de confirmación. Te avisaremos cuando el pago sea validado.${clienteReconocido?.recurrente ? ` Qué bueno verte de nuevo, ${clienteReconocido.nombre}.` : ""}`
+            : `${clienteReconocido?.recurrente ? `Qué bueno verte de nuevo, ${clienteReconocido.nombre}. ` : ""}Tu pedido ya está en preparación. SofIA avisa cuando esté listo para retirar.`}
         </p>
         <button className="btn-primary btn-xl" onClick={onConfirmar}>
           Volver al inicio
@@ -379,6 +387,12 @@ function Pago({ carrito, onConfirmar, onVolver }) {
         <button className={`nav-btn ${metodo === "qr" ? "nav-btn-activo" : ""}`} onClick={() => setMetodo("qr")}>
           QR de prueba
         </button>
+      </div>
+      <div className="customer-form" style={{ display: "grid", gap: 8, width: "min(100%, 360px)", margin: "12px 0" }}>
+        <p className="qr-hint">Déjanos tus datos para identificarte en futuras visitas.</p>
+        <input className="chat-input" type="text" placeholder="Nombre completo" value={cliente.nombre} onChange={(event) => setCliente({ ...cliente, nombre: event.target.value })} />
+        <input className="chat-input" type="tel" placeholder="Teléfono" value={cliente.telefono} onChange={(event) => setCliente({ ...cliente, telefono: event.target.value })} />
+        <input className="chat-input" type="email" placeholder="Correo electrónico" value={cliente.email} onChange={(event) => setCliente({ ...cliente, email: event.target.value })} />
       </div>
       {metodo === "transferencia" ? (
         <>
