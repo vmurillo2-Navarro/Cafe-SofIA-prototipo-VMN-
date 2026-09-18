@@ -380,7 +380,7 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
       <div className="pedido-layout">
         <div className="chat-col">
           <div className="chat-header">
-            <Orbe estado={estadoOrbe} size={56} />
+            <div className={`sofia-avatar sofia-avatar-${estadoOrbe}`} role="img" aria-label="SofIA, asistente de Café SofIA" />
             <div>
               <div className="chat-header-name">SofIA</div>
               <div className="chat-header-status">
@@ -976,6 +976,10 @@ export default function CafeSofiaPrototipo() {
         .pedido-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; flex: 1; min-height: 0; }
         .chat-col { display: flex; flex-direction: column; background: #141233; border: 1px solid rgba(155,92,246,0.18); border-radius: 20px; padding: 18px; min-height: 0; }
         .chat-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .sofia-avatar { width: 56px; height: 56px; flex-shrink: 0; border-radius: 50%; background-image: linear-gradient(180deg, rgba(8, 9, 31, 0.04), rgba(8, 9, 31, 0.34)), url("https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=240&q=85"); background-position: center; background-size: cover; border: 2px solid rgba(244, 200, 99, 0.72); box-shadow: 0 0 18px rgba(244, 200, 99, 0.24); transition: transform 0.5s ease, box-shadow 0.5s ease, border-color 0.5s ease; animation: sofia-breathe 4s ease-in-out infinite; }
+        .sofia-avatar-escuchando { border-color: #5AC8FA; box-shadow: 0 0 20px rgba(90, 200, 250, 0.48); transform: scale(1.06); }
+        .sofia-avatar-pensando { border-color: #F4C863; box-shadow: 0 0 20px rgba(244, 200, 99, 0.5); transform: scale(1.04); }
+        .sofia-avatar-hablando { border-color: #9B5CF6; box-shadow: 0 0 22px rgba(155, 92, 246, 0.55); transform: scale(1.1); }
         .chat-header-name { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16px; }
         .chat-header-status { font-size: 12px; color: #8683B0; }
         .chat-msgs { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px; min-height: 120px; }
