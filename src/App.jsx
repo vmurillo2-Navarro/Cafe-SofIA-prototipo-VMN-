@@ -158,6 +158,15 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
         .replace(/[¿?¡!,.]/g, " ")
         .replace(/\s+/g, " ")
         .trim();
+      const ultimoMensaje = mensajes[mensajes.length - 1];
+      const esperaNombre = ultimoMensaje?.de === "sofia" && /con quien tengo el gusto|decime tu nombre/.test(
+        ultimoMensaje.texto.toLowerCase()
+      );
+      const palabrasNombre = textoPlano.split(" ");
+      const esNombre = esperaNombre
+        && palabrasNombre.length <= 3
+        && palabrasNombre.every((palabra) => /^[a-záéíóúüñ]+$/i.test(palabra))
+        && !menu.some((producto) => textoPlano.includes(producto.nombre.toLowerCase().split(" ")[0]));
       const esPreguntaDeStock = /stock|queda|disponib|tenes|hay caf|tipos de caf|que caf/.test(
         textoLower
       );
@@ -185,6 +194,17 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
           {
             de: "sofia",
             texto: "¡Hola! Qué lindo recibirte en Café SofIA. ¿Con quién tengo el gusto? Así te atiendo como corresponde.",
+          },
+        ]);
+        setEstadoOrbe("hablando");
+        setTimeout(() => setEstadoOrbe("idle"), 900);
+      } else if (esNombre) {
+        const nombre = palabrasNombre.map((palabra) => palabra.charAt(0).toUpperCase() + palabra.slice(1)).join(" ");
+        setMensajes((m) => [
+          ...m,
+          {
+            de: "sofia",
+            texto: `¡Mucho gusto, ${nombre}! Soy SofIA y estoy para ayudarte. ¿Te cuento qué tenemos disponible o ya sabés qué café querés pedir?`,
           },
         ]);
         setEstadoOrbe("hablando");
