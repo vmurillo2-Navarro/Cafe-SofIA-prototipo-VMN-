@@ -76,7 +76,7 @@ function Bienvenida({ onStart }) {
 }
 
 // ---------- Pantalla: Pedido (chat) ----------
-function Pedido({ carrito, setCarrito, onIrPago, onVolver }) {
+function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
   const [mensajes, setMensajes] = useState([
     { de: "sofia", texto: "¡Hola! Soy SofIA. ¿Qué te gustaría tomar hoy? Puedo contarte qué tenemos disponible." },
   ]);
@@ -137,7 +137,7 @@ function Pedido({ carrito, setCarrito, onIrPago, onVolver }) {
       const esPreguntaHumano = /hablar con una persona|hablar con alguien|hablar con un humano|atención humana/.test(
         textoLower
       );
-      const match = MENU.find((p) => textoLower.includes(p.nombre.toLowerCase().split(" ")[0]));
+      const match = menu.find((p) => textoLower.includes(p.nombre.toLowerCase().split(" ")[0]));
 
       if (esPreguntaIdentidad) {
         setMensajes((m) => [
@@ -173,7 +173,7 @@ function Pedido({ carrito, setCarrito, onIrPago, onVolver }) {
         setTimeout(() => setEstadoOrbe("idle"), 900);
       } else if (esPreguntaDeRecomendacion) {
         const haceCalor = /calor|caluroso|caliente afuera/.test(textoLower);
-        const recomendado = haceCalor ? MENU.find((p) => p.id === "esp") : MENU.find((p) => p.id === "lat");
+        const recomendado = haceCalor ? menu[0] : menu.find((p) => p.id === "latte") || menu[0];
         const razon = haceCalor
           ? "algo corto e intenso rinde mejor cuando aprieta el calor"
           : "en Costa Rica el clima suele ser cálido casi todo el año, así que un café suave con leche entra bien en cualquier momento";
@@ -187,7 +187,7 @@ function Pedido({ carrito, setCarrito, onIrPago, onVolver }) {
         setEstadoOrbe("hablando");
         setTimeout(() => setEstadoOrbe("idle"), 900);
       } else if (esPreguntaDeStock) {
-        const detalle = MENU.map((p) => `${p.nombre}: ${p.stock} unidades`).join(", ");
+        const detalle = menu.map((p) => `${p.nombre}: ${p.stock} unidades`).join(", ");
         setMensajes((m) => [
           ...m,
           { de: "sofia", texto: `Este es el stock real ahora mismo — ${detalle}. ¿Querés que te agregue alguno?` },
@@ -195,7 +195,7 @@ function Pedido({ carrito, setCarrito, onIrPago, onVolver }) {
         setEstadoOrbe("hablando");
         setTimeout(() => setEstadoOrbe("idle"), 900);
       } else if (esPreguntaDeMenu) {
-        const detalle = MENU.map((p) => `${p.nombre} (${colones(p.precio)})`).join(", ");
+        const detalle = menu.map((p) => `${p.nombre} (${colones(p.precio)})`).join(", ");
         setMensajes((m) => [
           ...m,
           { de: "sofia", texto: `Hoy tenemos: ${detalle}. Decime cuál te gustaría y te lo sumo al pedido.` },
@@ -273,14 +273,15 @@ function Pedido({ carrito, setCarrito, onIrPago, onVolver }) {
         <div className="menu-col">
           <div className="menu-col-title">Carta de hoy</div>
           <div className="menu-grid">
-            {MENU.map((p) => (
-              <button key={p.id} className="menu-card" onClick={() => agregarAlCarrito(p)}>
+            {menu.length === 0 && <p className="qr-note">Consultando el catálogo real…</p>}
+            {menu.map((p) => (
+              <button key={p.id} className="menu-card" onClick={() => agregarAlCarrito(p)} disabled={!p.disponible || p.stock <= 0}>
                 <div className="menu-card-top">
                   <span className="menu-card-name">{p.nombre}</span>
                   {p.stock <= 5 && <span className="tag-bajo">quedan {p.stock}</span>}
                 </div>
                 <p className="menu-card-desc">{p.desc}</p>
-                <div className="menu-card-price">{colones(p.precio)}</div>
+                <div className="menu-card-price">{p.disponible === false || p.stock <= 0 ? "Agotado" : colones(p.precio)}</div>
               </button>
             ))}
           </div>
@@ -449,10 +450,10 @@ function Pago({ carrito, onConfirmar, onVolver }) {
 }
 
 // ---------- Pantalla: Transparencia pública ----------
-function Transparencia({ onVolver }) {
+function Transparencia({ menu, onVolver }) {
   const totalHoy = VENTAS_HOY.reduce((a, b) => a + b.monto, 0);
   const maxVenta = Math.max(...VENTAS_HOY.map((v) => v.monto));
-  const stockCritico = MENU.filter((p) => p.stock <= 5);
+  const stockCritico = menu.filter((p) => p.stock <= 5);
   const totalGastos = GASTOS.reduce((a, b) => a + b.monto, 0);
 
   return (
@@ -478,7 +479,7 @@ function Transparencia({ onVolver }) {
 
         <div className="tcard">
           <div className="tcard-label">Stock por producto</div>
-          {MENU.map((p) => (
+          {menu.map((p) => (
             <div className="stock-row" key={p.id}>
               <span className="stock-name">{p.nombre}</span>
               <div className="stock-bar-track">
@@ -708,6 +709,18 @@ function Admin() {
 export default function CafeSofiaPrototipo() {
   const [pantalla, setPantalla] = useState("bienvenida");
   const [carrito, setCarrito] = useState([]);
+  const [menu, setMenu] = useState(MENU);
+  const [catalogoError, setCatalogoError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/catalog")
+      .then((respuesta) => respuesta.json())
+      .then((resultado) => {
+        if (!resultado.ok || !Array.isArray(resultado.productos)) throw new Error(resultado.error || "No se pudo consultar el catálogo.");
+        setMenu(resultado.productos);
+      })
+      .catch(() => setCatalogoError("No pudimos actualizar el inventario real; intenta recargar la página."));
+  }, []);
 
   if (window.location.pathname === "/admin") return <Admin />;
 
@@ -842,12 +855,14 @@ export default function CafeSofiaPrototipo() {
 
       {pantalla === "bienvenida" && <Bienvenida onStart={() => setPantalla("pedido")} />}
       {pantalla === "pedido" && (
-        <Pedido carrito={carrito} setCarrito={setCarrito} onIrPago={() => setPantalla("pago")} onVolver={irInicio} />
+        <Pedido menu={menu} carrito={carrito} setCarrito={setCarrito} onIrPago={() => setPantalla("pago")} onVolver={irInicio} />
       )}
       {pantalla === "pago" && (
         <Pago carrito={carrito} onConfirmar={irInicio} onVolver={() => setPantalla("pedido")} />
       )}
-      {pantalla === "transparencia" && <Transparencia onVolver={irInicio} />}
+      {pantalla === "transparencia" && <Transparencia menu={menu} onVolver={irInicio} />}
+
+      {catalogoError && <p className="qr-note">{catalogoError}</p>}
 
       <NavInferior pantalla={pantalla} ir={setPantalla} />
     </div>
