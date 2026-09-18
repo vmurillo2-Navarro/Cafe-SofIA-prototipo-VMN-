@@ -545,7 +545,7 @@ function Pago({ carrito, onConfirmar, onVolver }) {
   }
 
   return (
-    <div className="screen center">
+    <div className="screen center payment-screen">
       <TopBar titulo="Elegí cómo pagar" onVolver={onVolver} floating />
       <div className="payment-methods">
         <button className={`nav-btn ${metodo === "transferencia" ? "nav-btn-activo" : ""}`} onClick={() => setMetodo("transferencia")}>
@@ -555,46 +555,50 @@ function Pago({ carrito, onConfirmar, onVolver }) {
           QR de prueba
         </button>
       </div>
-      <div className="customer-form" style={{ display: "grid", gap: 8, width: "min(100%, 360px)", margin: "12px 0" }}>
-        <p className="qr-hint">Déjanos tus datos para identificarte en futuras visitas.</p>
-        <input className="chat-input" type="text" placeholder="Nombre completo" value={cliente.nombre} onChange={buscarCliente} />
-        {buscandoCliente && <span className="qr-note">Buscando tus datos…</span>}
-        <input className="chat-input" type="tel" placeholder="Teléfono" value={cliente.telefono} onChange={(event) => setCliente({ ...cliente, telefono: event.target.value })} />
-        <input className="chat-input" type="email" placeholder="Correo electrónico" value={cliente.email} onChange={(event) => setCliente({ ...cliente, email: event.target.value })} />
-        <label className="qr-note" style={{ display: "flex", gap: 8, alignItems: "flex-start", textAlign: "left" }}>
-          <input
-            type="checkbox"
-            checked={cliente.marketing_consentimiento}
-            onChange={(event) => setCliente({ ...cliente, marketing_consentimiento: event.target.checked })}
-          />
-          Quiero recibir novedades y recordatorios de Café SofIA por correo.
-        </label>
+      <div className="payment-content">
+        <div className="customer-form">
+          <p className="qr-hint">Déjanos tus datos para identificarte en futuras visitas.</p>
+          <input className="chat-input" type="text" placeholder="Nombre completo" value={cliente.nombre} onChange={buscarCliente} />
+          {buscandoCliente && <span className="qr-note">Buscando tus datos…</span>}
+          <input className="chat-input" type="tel" placeholder="Teléfono" value={cliente.telefono} onChange={(event) => setCliente({ ...cliente, telefono: event.target.value })} />
+          <input className="chat-input" type="email" placeholder="Correo electrónico" value={cliente.email} onChange={(event) => setCliente({ ...cliente, email: event.target.value })} />
+          <label className="qr-note customer-consent">
+            <input
+              type="checkbox"
+              checked={cliente.marketing_consentimiento}
+              onChange={(event) => setCliente({ ...cliente, marketing_consentimiento: event.target.checked })}
+            />
+            Quiero recibir novedades y recordatorios de Café SofIA por correo.
+          </label>
+        </div>
+        <div className="payment-summary">
+          {metodo === "transferencia" ? (
+            <>
+              <p className="qr-hint">Transfiere el total y conserva el comprobante.</p>
+              <div className="qr-box bank-details">
+                <p><strong>BAC San José</strong></p>
+                <p>Alias: Banco, BAC</p>
+                <p>IBAN: CR91010200009291412574</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="qr-hint">Escaneá este código con la app de la universidad para pagar desde tu cuenta.</p>
+              <div className="qr-box">
+                <QrCode size={180} color="#0B0A1F" />
+              </div>
+            </>
+          )}
+          <div className="qr-total">{colones(total)}</div>
+          <button className="btn-primary btn-xl" onClick={confirmarPago} disabled={enviando}>
+            {enviando ? "Enviando…" : metodo === "transferencia" ? "Ya realicé la transferencia" : "Simular pago confirmado"}
+          </button>
+          {error && <p className="qr-note">No se registró el pedido: {error}</p>}
+          <p className="qr-note">
+            {metodo === "transferencia" ? "La venta se registra cuando el administrador confirme el comprobante." : "En la versión real, esta pantalla se actualiza sola al detectar el pago."}
+          </p>
+        </div>
       </div>
-      {metodo === "transferencia" ? (
-        <>
-          <p className="qr-hint">Transfiere el total y conserva el comprobante.</p>
-          <div className="qr-box bank-details">
-            <p><strong>BAC San José</strong></p>
-            <p>Alias: Banco, BAC</p>
-            <p>IBAN: CR91010200009291412574</p>
-          </div>
-        </>
-      ) : (
-        <>
-          <p className="qr-hint">Escaneá este código con la app de la universidad para pagar desde tu cuenta.</p>
-          <div className="qr-box">
-            <QrCode size={180} color="#0B0A1F" />
-          </div>
-        </>
-      )}
-      <div className="qr-total">{colones(total)}</div>
-      <button className="btn-primary btn-xl" onClick={confirmarPago} disabled={enviando}>
-        {enviando ? "Enviando…" : metodo === "transferencia" ? "Ya realicé la transferencia" : "Simular pago confirmado"}
-      </button>
-      {error && <p className="qr-note">No se registró el pedido: {error}</p>}
-      <p className="qr-note">
-        {metodo === "transferencia" ? "La venta se registra cuando el administrador confirme el comprobante." : "En la versión real, esta pantalla se actualiza sola al detectar el pago."}
-      </p>
     </div>
   );
 }
@@ -1000,12 +1004,19 @@ export default function CafeSofiaPrototipo() {
         .carrito-item { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
         .carrito-total { display: flex; justify-content: space-between; font-weight: 900; border-top: 1px solid #2C2A55; margin-top: 8px; padding-top: 8px; color: #F4C863; }
 
-        .qr-hint { color: #B9B6E8; max-width: 340px; margin: 60px 0 20px; }
+        .payment-screen { justify-content: flex-start !important; gap: 10px !important; padding-top: 78px; overflow: hidden; }
+        .payment-methods { display: flex; width: min(100%, 520px); gap: 8px; }
+        .payment-methods .nav-btn { flex: 1; }
+        .payment-content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; width: min(100%, 760px); align-items: start; }
+        .customer-form, .payment-summary { display: grid; gap: 8px; align-content: start; min-width: 0; }
+        .qr-hint { color: #B9B6E8; max-width: 340px; margin: 4px 0 8px; }
+        .customer-consent { display: flex; gap: 8px; align-items: flex-start; text-align: left; margin-top: 2px; }
         .qr-box { background: #EAE9FB; padding: 20px; border-radius: 20px; }
         .bank-details { color: #0B0A1F; width: min(100%, 360px); box-sizing: border-box; }
-        .bank-details p { margin: 7px 0; }
-        .qr-total { font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 700; margin: 16px 0; color: #F4C863; }
-        .qr-note { color: #7B78A8; font-size: 12px; margin-top: 10px; }
+        .bank-details p { margin: 5px 0; }
+        .qr-total { font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 700; margin: 8px 0 0; color: #F4C863; }
+        .payment-summary .btn-xl { margin-top: 0; }
+        .qr-note { color: #7B78A8; font-size: 12px; margin: 4px 0 0; }
 
         .check-circle { width: 90px; height: 90px; border-radius: 50%; background: #3ED6A3; display: flex; align-items: center; justify-content: center; }
         .confirm-title { font-family: 'Space Grotesk', sans-serif; margin: 4px 0; }
@@ -1046,6 +1057,10 @@ export default function CafeSofiaPrototipo() {
         .nav-btn-activo { color: #F4C863; }
 
         @media (max-width: 720px) {
+          .payment-screen { padding: 70px 16px 16px; overflow-y: auto; }
+          .payment-content { grid-template-columns: 1fr; gap: 10px; }
+          .payment-summary .qr-box { padding: 12px; }
+          .payment-summary .qr-box:not(.bank-details) svg { width: 130px; height: 130px; }
           .pedido-layout { grid-template-columns: 1fr; }
           .project-steps { grid-template-columns: 1fr 1fr; }
           .transp-grid { grid-template-columns: 1fr; }
