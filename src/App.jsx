@@ -326,6 +326,7 @@ function Pago({ carrito, onConfirmar, onVolver }) {
   const [metodo, setMetodo] = useState("transferencia");
   const [cliente, setCliente] = useState({ nombre: "", telefono: "", email: "" });
   const [clienteReconocido, setClienteReconocido] = useState(null);
+  const [buscandoCliente, setBuscandoCliente] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
 
@@ -355,6 +356,29 @@ function Pago({ carrito, onConfirmar, onVolver }) {
       setError(requestError.message);
     } finally {
       setEnviando(false);
+    }
+  }
+
+  async function buscarCliente(event) {
+    const nombre = event.target.value;
+    setCliente({ ...cliente, nombre });
+    if (nombre.trim().length < 3) return;
+    setBuscandoCliente(true);
+    try {
+      const respuesta = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipo: "buscar_cliente", nombre }),
+      });
+      const resultado = await respuesta.json();
+      if (resultado.ok && resultado.cliente) {
+        setCliente((actual) => ({ ...actual, ...resultado.cliente, nombre }));
+        setClienteReconocido({ ...resultado.cliente, recurrente: true });
+      }
+    } catch (lookupError) {
+      // La compra sigue disponible aunque la búsqueda no responda.
+    } finally {
+      setBuscandoCliente(false);
     }
   }
 
@@ -390,7 +414,8 @@ function Pago({ carrito, onConfirmar, onVolver }) {
       </div>
       <div className="customer-form" style={{ display: "grid", gap: 8, width: "min(100%, 360px)", margin: "12px 0" }}>
         <p className="qr-hint">Déjanos tus datos para identificarte en futuras visitas.</p>
-        <input className="chat-input" type="text" placeholder="Nombre completo" value={cliente.nombre} onChange={(event) => setCliente({ ...cliente, nombre: event.target.value })} />
+        <input className="chat-input" type="text" placeholder="Nombre completo" value={cliente.nombre} onChange={buscarCliente} />
+        {buscandoCliente && <span className="qr-note">Buscando tus datos…</span>}
         <input className="chat-input" type="tel" placeholder="Teléfono" value={cliente.telefono} onChange={(event) => setCliente({ ...cliente, telefono: event.target.value })} />
         <input className="chat-input" type="email" placeholder="Correo electrónico" value={cliente.email} onChange={(event) => setCliente({ ...cliente, email: event.target.value })} />
       </div>
