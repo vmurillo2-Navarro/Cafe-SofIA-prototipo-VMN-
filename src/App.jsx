@@ -619,7 +619,15 @@ function Admin() {
           </div>
           <div className="tcard">
             <div className="tcard-label">Insumos y stock</div>
-            {(datos.insumos || []).map((item) => <p key={item.id_insumo}>{item.nombre}: {item.stock}</p>)}
+            {(datos.insumos || []).map((item) => {
+              const bajo = Boolean(item.alerta_disparada) || Number(item.stock) <= Number(item.umbral_min);
+              return (
+                <p key={item.id_insumo}>
+                  {item.nombre}: {item.stock}
+                  {bajo && <strong className="stock-alert"> · Stock bajo</strong>}
+                </p>
+              );
+            })}
           </div>
           <div className="tcard">
             <div className="tcard-label">Transferencias pendientes</div>
