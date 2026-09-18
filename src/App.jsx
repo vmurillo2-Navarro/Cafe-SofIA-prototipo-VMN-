@@ -182,6 +182,9 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
       const esPreguntaProyecto = /cómo funcionas|como funcionas|cómo estás hecha|como estas hecha|cómo te construyeron|como te construyeron|cómo funciona(?: el| tu)? proyecto|como funciona(?: el| tu)? proyecto|cómo funciona sofia|como funciona sofia|explica(?:me)? tu proyecto|explícame tu proyecto|qué hay detrás|que hay detras|qué pasa con mis datos|que pasa con mis datos|cómo tomas decisiones|como tomas decisiones|cómo trabaja sofia|como trabaja sofia|qué puedes hacer|que puedes hacer|qué haces exactamente|que haces exactamente|cómo está construida|como esta construida|cómo fue creada|como fue creada|transparencia/.test(
         textoLower
       );
+      const esPreguntaObjetivo = /cual es tu objetivo|que objetivo perseguis|como te adaptas|te adaptas al contexto|si falta stock|que harias si falta stock/.test(
+        textoPlano
+      );
       const esPreguntaError = /puedes equivocarte|podés equivocarte|inventas respuestas|puedes mentir/.test(textoLower);
       const esPreguntaHumano = /hablar con una persona|hablar con alguien|hablar con un humano|atención humana/.test(
         textoLower
@@ -231,6 +234,17 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
             de: "sofia",
             texto:
               "Soy la interfaz de un proyecto de café con IA. La web muestra la carta y recibe tu pedido; un backend seguro consulta el inventario real, registra ventas e interacciones y conecta el chat con un modelo de lenguaje. Yo no invento stock ni precios: para esos datos consulto el sistema. Las claves quedan en el servidor, y una persona del campus prepara y entrega cada café.",
+          },
+        ]);
+        setEstadoOrbe("hablando");
+        setTimeout(() => setEstadoOrbe("idle"), 900);
+      } else if (esPreguntaObjetivo) {
+        setMensajes((m) => [
+          ...m,
+          {
+            de: "sofia",
+            texto:
+              "Mi objetivo declarado es mantener Café SofIA operativo: atender pedidos reales, cuidar el stock y la caja, y ser transparente cuando no tengo un dato. Me adapto al contexto consultando las ventas, el inventario, la caja, los pedidos al proveedor y las tareas pendientes. Si falta stock, no prometo ese producto: priorizo una reposición prudente o te informo la situación.",
           },
         ]);
         setEstadoOrbe("hablando");
