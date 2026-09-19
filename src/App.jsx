@@ -947,9 +947,10 @@ function Admin() {
   const transferencias = datos?.transferencias || [];
   const pedidosProveedor = datos?.pedidos_proveedor || [];
   const reposicionRecomendada = datos?.reposicion_recomendada || [];
+  const finanzas = datos?.finanzas || { ingresos: 0, gastos: 0, balance: 0, ventas_registradas: 0, aclaracion: "" };
   return (
     <div className="app-root">
-      <style>{`.app-root{font-family:Lato,sans-serif;background:linear-gradient(180deg,#0B0A1F 0%,#120E33 45%,#0B0A1F 100%);color:#EAE9FB;min-height:100vh;width:100%;display:flex;flex-direction:column}.screen{width:100%;max-width:1100px;box-sizing:border-box;margin:0 auto;padding:28px 32px;position:relative}.topbar{display:flex;align-items:center;gap:12px;margin-bottom:22px}.back-btn{background:rgba(255,255,255,.08);border:0;color:#EAE9FB;width:38px;height:38px;border-radius:50%;cursor:pointer}.topbar-title{font-family:Space Grotesk,sans-serif;font-size:22px;font-weight:700}.transp-intro{color:#B9B6E8;font-size:14px;margin-bottom:18px}.transp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.tcard{background:#141233;border:1px solid rgba(155,92,246,.18);border-radius:18px;padding:18px;min-width:0}.tcard-label{font-family:Space Grotesk,sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#B9B6E8;margin-bottom:12px}.tcard p{margin:8px 0;color:#EAE9FB}.gasto-row{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;padding:10px 0;border-bottom:1px solid #2C2A55}.gasto-row:last-child{border-bottom:0}.nav-btn{background:#1E1A45;border:1px solid rgba(155,92,246,.25);color:#EAE9FB;border-radius:10px;padding:8px 12px;cursor:pointer;font-family:inherit;font-size:12px}.nav-btn:hover{border-color:#9B5CF6}.btn-primary{background:linear-gradient(120deg,#7C3AED,#9B5CF6);color:#fff;border:0;border-radius:999px;font-weight:700;cursor:pointer;padding:12px 20px;margin-top:20px}.btn-xl{font-size:15px;padding:13px 24px}@media(max-width:720px){.screen{padding:20px 16px}.transp-grid{grid-template-columns:1fr}.gasto-row{align-items:flex-start;flex-direction:column}}`}</style>
+      <style>{`.app-root{font-family:Lato,sans-serif;background:linear-gradient(180deg,#0B0A1F 0%,#120E33 45%,#0B0A1F 100%);color:#EAE9FB;min-height:100vh;width:100%;display:flex;flex-direction:column}.screen{width:100%;max-width:1100px;box-sizing:border-box;margin:0 auto;padding:28px 32px;position:relative}.topbar{display:flex;align-items:center;gap:12px;margin-bottom:22px}.back-btn{background:rgba(255,255,255,.08);border:0;color:#EAE9FB;width:38px;height:38px;border-radius:50%;cursor:pointer}.topbar-title{font-family:Space Grotesk,sans-serif;font-size:22px;font-weight:700}.transp-intro{color:#B9B6E8;font-size:14px;margin-bottom:18px}.transp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.tcard{background:#141233;border:1px solid rgba(155,92,246,.18);border-radius:18px;padding:18px;min-width:0}.tcard-label{font-family:Space Grotesk,sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#B9B6E8;margin-bottom:12px}.tcard p{margin:8px 0;color:#EAE9FB}.gasto-row{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;padding:10px 0;border-bottom:1px solid #2C2A55}.gasto-row:last-child{border-bottom:0}.nav-btn{background:#1E1A45;border:1px solid rgba(155,92,246,.25);color:#EAE9FB;border-radius:10px;padding:8px 12px;cursor:pointer;font-family:inherit;font-size:12px}.nav-btn:hover{border-color:#9B5CF6}.btn-primary{background:linear-gradient(120deg,#7C3AED,#9B5CF6);color:#fff;border:0;border-radius:999px;font-weight:700;cursor:pointer;padding:12px 20px;margin-top:20px}.btn-xl{font-size:15px;padding:13px 24px}.admin-finance{margin:16px 0}.admin-finance-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.admin-finance-card{display:flex;flex-direction:column;gap:6px}.admin-finance-label{color:#B9B6E8;font-size:12px}.admin-finance-value{color:#F4C863;font-family:Space Grotesk,sans-serif;font-size:24px;font-weight:700}.admin-finance-positive{color:#3ED6A3}.admin-finance-negative{color:#FF7A9C}.admin-finance-note{color:#7B78A8;font-size:11px}@media(max-width:720px){.screen{padding:20px 16px}.transp-grid{grid-template-columns:1fr}.gasto-row{align-items:flex-start;flex-direction:column}.admin-finance-grid{grid-template-columns:1fr}}`}</style>
       <div className="screen">
         <TopBar titulo="Trastienda" onVolver={() => { window.location.href = "/"; }} />
         <p className="transp-intro">Cafés, insumos, stock y transferencias pendientes.</p>
@@ -960,6 +961,29 @@ function Admin() {
             <span>{datos.modo_real ? "Activo" : "Apagado"}</span>
           </label>
           <p className="qr-note">Apagado = simulador. Activo = ventas y reloj reales.</p>
+        </div>
+        <div className="tcard admin-finance">
+          <div className="tcard-label">Resultado financiero operativo</div>
+          <div className="admin-finance-grid">
+            <div className="admin-finance-card">
+              <span className="admin-finance-label">Ingresos</span>
+              <strong className="admin-finance-value admin-finance-positive">{colones(Number(finanzas.ingresos) || 0)}</strong>
+              <span className="admin-finance-note">{finanzas.ventas_registradas || 0} ventas registradas</span>
+            </div>
+            <div className="admin-finance-card">
+              <span className="admin-finance-label">Gastos</span>
+              <strong className="admin-finance-value">{colones(Number(finanzas.gastos) || 0)}</strong>
+              <span className="admin-finance-note">Egresos registrados en caja</span>
+            </div>
+            <div className="admin-finance-card">
+              <span className="admin-finance-label">Balance operativo</span>
+              <strong className={`admin-finance-value ${(Number(finanzas.balance) || 0) >= 0 ? "admin-finance-positive" : "admin-finance-negative"}`}>
+                {colones(Number(finanzas.balance) || 0)}
+              </strong>
+              <span className="admin-finance-note">Ingresos menos gastos</span>
+            </div>
+          </div>
+          {finanzas.aclaracion && <p className="qr-note">{finanzas.aclaracion}</p>}
         </div>
         <div className="transp-grid">
           <div className="tcard">
