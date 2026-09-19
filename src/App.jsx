@@ -635,13 +635,8 @@ function Desafios({ onVolver }) {
   const [retoCircular, setRetoCircular] = useState(false);
   const correcta = respuesta === "percibe-decide-actua";
 
-  useEffect(() => {
-    setRetoCircular(window.localStorage.getItem("sofia-reto-circular-v1") === "true");
-  }, []);
-
   function completarRetoCircular() {
     setRetoCircular(true);
-    window.localStorage.setItem("sofia-reto-circular-v1", "true");
   }
 
   return (
