@@ -3,6 +3,8 @@ export default async function handler(request, response) {
     return response.status(405).json({ ok: false, error: 'Método no permitido.' });
   }
 
+  response.setHeader('Cache-Control', 'no-store, max-age=0');
+
   const backendUrl = process.env.APPS_SCRIPT_URL;
   const backendToken = process.env.Apps_Script_token;
   if (!backendUrl || !backendToken) {

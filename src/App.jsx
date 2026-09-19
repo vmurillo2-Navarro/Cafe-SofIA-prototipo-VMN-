@@ -1050,7 +1050,7 @@ export default function CafeSofiaPrototipo() {
   const [catalogoError, setCatalogoError] = useState("");
 
   useEffect(() => {
-    fetch("/api/catalog")
+    fetch(`/api/catalog?actualizado=${Date.now()}`, { cache: "no-store" })
       .then((respuesta) => respuesta.json())
       .then((resultado) => {
         if (!resultado.ok || !Array.isArray(resultado.productos)) throw new Error(resultado.error || "No se pudo consultar el catálogo.");
@@ -1058,7 +1058,7 @@ export default function CafeSofiaPrototipo() {
         setFinanzas(resultado.finanzas || null);
       })
       .catch(() => setCatalogoError("No pudimos actualizar el inventario real; intenta recargar la página."));
-  }, []);
+  }, [pantalla]);
 
   if (window.location.pathname === "/admin") return <Admin />;
 
