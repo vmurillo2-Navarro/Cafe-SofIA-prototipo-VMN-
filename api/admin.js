@@ -3,6 +3,8 @@ export default async function handler(request, response) {
     return response.status(405).json({ ok: false, error: 'Método no permitido.' });
   }
 
+  response.setHeader('Cache-Control', 'no-store, max-age=0');
+
   const password = request.headers['x-admin-password'];
   if (!password || password !== process.env.ADMIN_PASSWORD) {
     return response.status(401).json({ ok: false, error: 'Clave incorrecta.' });
@@ -26,7 +28,7 @@ export default async function handler(request, response) {
 
   try {
     const backendResponse = await fetch(
-      `${backendUrl}${separator}api=admin&payload=${encodeURIComponent(payload)}`
+      `${backendUrl}${separator}api=admin&payload=${encodeURIComponent(payload)}&t=${Date.now()}`
     );
     const result = await backendResponse.json();
     return response.status(backendResponse.ok && result.ok ? 200 : 502).json(result);

@@ -16,7 +16,7 @@ export default async function handler(request, response) {
 
   try {
     const backendResponse = await fetch(
-      `${backendUrl}${separator}api=catalog&payload=${encodeURIComponent(payload)}`
+      `${backendUrl}${separator}api=catalog&payload=${encodeURIComponent(payload)}&t=${Date.now()}`
     );
     const result = await backendResponse.json();
     return response.status(backendResponse.ok && result.ok ? 200 : 502).json(result);

@@ -869,7 +869,7 @@ function Admin() {
     setCargando(true);
     setError("");
     try {
-      const respuesta = await fetch("/api/admin", { headers: { "x-admin-password": clave } });
+      const respuesta = await fetch(`/api/admin?actualizado=${Date.now()}`, { cache: "no-store", headers: { "x-admin-password": clave } });
       const resultado = await respuesta.json();
       if (!respuesta.ok || !resultado.ok) throw new Error(resultado.error || "No se pudo cargar el panel.");
       setDatos(resultado);
