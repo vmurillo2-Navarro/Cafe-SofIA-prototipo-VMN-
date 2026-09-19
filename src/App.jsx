@@ -809,7 +809,7 @@ function Transparencia({ menu, onVolver, finanzas }) {
         <div className="tcard">
           <div className="tcard-label">Estado de SofIA</div>
           <div className="estado-sofia">
-            <Orbe estado="idle" size={64} />
+            <div className="sofia-avatar transparency-avatar" role="img" aria-label="SofIA, asistente de Café SofIA" />
             <div>
               <div className="estado-nombre">En línea</div>
               <p className="estado-desc">
@@ -1166,6 +1166,7 @@ export default function CafeSofiaPrototipo() {
         .sofia-avatar-escuchando { border-color: #5AC8FA; box-shadow: 0 0 20px rgba(90, 200, 250, 0.48); transform: scale(1.06); }
         .sofia-avatar-pensando { border-color: #F4C863; box-shadow: 0 0 20px rgba(244, 200, 99, 0.5); transform: scale(1.04); }
         .sofia-avatar-hablando { border-color: #9B5CF6; box-shadow: 0 0 22px rgba(155, 92, 246, 0.55); transform: scale(1.1); }
+        .transparency-avatar { width: 64px; height: 64px; animation: none; }
         .chat-header-name { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16px; }
         .chat-header-status { font-size: 12px; color: #8683B0; }
         .chat-msgs { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px; min-height: 120px; }
