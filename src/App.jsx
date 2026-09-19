@@ -17,16 +17,6 @@ const VENTAS_HOY = [
   { hora: "13h", monto: 30 }, { hora: "14h", monto: 12 },
 ];
 
-const GASTOS = [
-  { concepto: "Reposición cápsulas — mixto", monto: 145000, fecha: "Hoy, 09:14" },
-  { concepto: "Leche y lácteos", monto: 38500, fecha: "Ayer, 16:40" },
-  { concepto: "Vasos y tapas", monto: 21000, fecha: "Ayer, 11:02" },
-];
-
-const INGRESOS_DEMO = [
-  { concepto: "Ventas de café", monto: 231600, fecha: "Hoy" },
-];
-
 const DESAFIOS = [
   {
     numero: "01",
@@ -705,13 +695,15 @@ function Desafios({ onVolver }) {
 }
 
 // ---------- Pantalla: Transparencia pública ----------
-function Transparencia({ menu, onVolver }) {
+function Transparencia({ menu, onVolver, finanzas }) {
   const totalHoy = VENTAS_HOY.reduce((a, b) => a + b.monto, 0);
   const maxVenta = Math.max(...VENTAS_HOY.map((v) => v.monto));
   const stockCritico = menu.filter((p) => p.stock <= 5);
-  const totalGastos = GASTOS.reduce((a, b) => a + b.monto, 0);
-  const totalIngresos = INGRESOS_DEMO.reduce((a, b) => a + b.monto, 0);
-  const balance = totalIngresos - totalGastos;
+  const finanzasDisponibles = Boolean(finanzas);
+  const totalGastos = Number(finanzas?.gastos) || 0;
+  const totalIngresos = Number(finanzas?.ingresos) || 0;
+  const balance = Number(finanzas?.balance) || 0;
+  const gastosDetalle = finanzas?.gastos_detalle || [];
 
   return (
     <div className="screen">
@@ -742,26 +734,26 @@ function Transparencia({ menu, onVolver }) {
       <div className="finance-section">
         <div className="finance-heading">
           <div className="tcard-label">Resultado del café</div>
-          <span className="demo-label">Datos de demostración</span>
+          <span className="demo-label">{finanzasDisponibles ? `Fuente: ${finanzas.fuente}` : "Datos financieros no disponibles"}</span>
         </div>
         <div className="finance-grid">
           <div className="tcard finance-card">
             <span className="finance-label">Ingresos</span>
-            <strong className="finance-value finance-positive">{colones(totalIngresos)}</strong>
-            <span className="finance-note">Ventas registradas</span>
+            <strong className="finance-value finance-positive">{finanzasDisponibles ? colones(totalIngresos) : "—"}</strong>
+            <span className="finance-note">{finanzasDisponibles ? `${finanzas.ventas_registradas} ventas registradas` : "Conectando con el backend"}</span>
           </div>
           <div className="tcard finance-card">
             <span className="finance-label">Gastos</span>
-            <strong className="finance-value">{colones(totalGastos)}</strong>
-            <span className="finance-note">Reposiciones y operación</span>
+            <strong className="finance-value">{finanzasDisponibles ? colones(totalGastos) : "—"}</strong>
+            <span className="finance-note">Egresos registrados en caja</span>
           </div>
           <div className="tcard finance-card finance-result">
             <span className="finance-label">Balance operativo</span>
-            <strong className={`finance-value ${balance >= 0 ? "finance-positive" : "finance-negative"}`}>{colones(balance)}</strong>
+            <strong className={`finance-value ${balance >= 0 ? "finance-positive" : "finance-negative"}`}>{finanzasDisponibles ? colones(balance) : "—"}</strong>
             <span className="finance-note">Ingresos menos gastos</span>
           </div>
         </div>
-        <p className="project-note">El balance no es una utilidad contable definitiva: no incluye impuestos, salarios ni otros costos que todavía no están cargados en este prototipo.</p>
+        <p className="project-note">{finanzas?.aclaracion || "El resumen aparecerá cuando el backend financiero esté conectado."}</p>
       </div>
       <div className="transp-grid">
         <div className="tcard">
@@ -798,7 +790,8 @@ function Transparencia({ menu, onVolver }) {
 
         <div className="tcard">
           <div className="tcard-label">Últimos gastos</div>
-          {GASTOS.map((g, i) => (
+          {gastosDetalle.length === 0 && <p>No hay egresos disponibles.</p>}
+          {gastosDetalle.slice(-3).reverse().map((g, i) => (
             <div className="gasto-row" key={i}>
               <div>
                 <div className="gasto-concepto">{g.concepto}</div>
@@ -1053,6 +1046,7 @@ export default function CafeSofiaPrototipo() {
   const [pantalla, setPantalla] = useState("bienvenida");
   const [carrito, setCarrito] = useState([]);
   const [menu, setMenu] = useState(MENU);
+  const [finanzas, setFinanzas] = useState(null);
   const [catalogoError, setCatalogoError] = useState("");
 
   useEffect(() => {
@@ -1061,6 +1055,7 @@ export default function CafeSofiaPrototipo() {
       .then((resultado) => {
         if (!resultado.ok || !Array.isArray(resultado.productos)) throw new Error(resultado.error || "No se pudo consultar el catálogo.");
         setMenu(resultado.productos);
+        setFinanzas(resultado.finanzas || null);
       })
       .catch(() => setCatalogoError("No pudimos actualizar el inventario real; intenta recargar la página."));
   }, []);
@@ -1292,7 +1287,7 @@ export default function CafeSofiaPrototipo() {
         <Pago carrito={carrito} onConfirmar={irInicio} onVolver={() => setPantalla("pedido")} />
       )}
       {pantalla === "desafios" && <Desafios onVolver={irInicio} />}
-      {pantalla === "transparencia" && <Transparencia menu={menu} onVolver={irInicio} />}
+      {pantalla === "transparencia" && <Transparencia menu={menu} finanzas={finanzas} onVolver={irInicio} />}
 
       {catalogoError && <p className="qr-note">{catalogoError}</p>}
 
