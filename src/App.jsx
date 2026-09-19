@@ -628,7 +628,17 @@ function Pago({ carrito, onConfirmar, onVolver }) {
 // ---------- Pantalla: Desafíos ----------
 function Desafios({ onVolver }) {
   const [respuesta, setRespuesta] = useState(null);
+  const [retoCircular, setRetoCircular] = useState(false);
   const correcta = respuesta === "percibe-decide-actua";
+
+  useEffect(() => {
+    setRetoCircular(window.localStorage.getItem("sofia-reto-circular-v1") === "true");
+  }, []);
+
+  function completarRetoCircular() {
+    setRetoCircular(true);
+    window.localStorage.setItem("sofia-reto-circular-v1", "true");
+  }
 
   return (
     <div className="screen">
@@ -661,6 +671,21 @@ function Desafios({ onVolver }) {
             {correcta ? "Exacto. Una IA agéntica percibe, decide y actúa sobre un objetivo, con límites." : "Todavía no. La clave es que SofIA no solo responde: entiende el contexto y toma una acción responsable."}
           </p>
         )}
+      </div>
+
+      <div className={`challenge-active circular-challenge ${retoCircular ? "circular-challenge-done" : ""}`}>
+        <div className="challenge-label">Desafío circular · Elegí reutilizar</div>
+        <h2>Una acción pequeña también diseña el futuro.</h2>
+        <p>Elegí una acción que puedas realizar hoy. SofIA registra tu avance en este dispositivo, sin inventar métricas ambientales.</p>
+        {retoCircular ? (
+          <div className="circular-done">✓ Desafío completado. Sumaste 1 punto como aliado circular.</div>
+        ) : (
+          <div className="challenge-options circular-options">
+            <button className="challenge-option" onClick={completarRetoCircular}>Traje mi vaso reutilizable.</button>
+            <button className="challenge-option" onClick={completarRetoCircular}>Elegí evitar un descartable innecesario.</button>
+          </div>
+        )}
+        <span className="challenge-note">Más adelante podremos sumar circuitos reales de retorno y reciclaje.</span>
       </div>
 
       <div className="challenge-path">
@@ -1076,6 +1101,11 @@ export default function CafeSofiaPrototipo() {
         .challenge-option-wrong { background: rgba(255,122,156,.12); border-color: #FF7A9C; }
         .challenge-feedback { color: #FF7A9C !important; font-size: 13px; margin: 12px 0 0 !important; }
         .challenge-feedback-good { color: #3ED6A3 !important; }
+        .circular-challenge { margin-top: 16px; border-color: rgba(62,214,163,.35); background: linear-gradient(135deg, #123A38, #141233); }
+        .circular-challenge-done { border-color: #3ED6A3; }
+        .circular-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .circular-done { background: rgba(62,214,163,.14); border: 1px solid rgba(62,214,163,.45); border-radius: 10px; color: #3ED6A3; font-size: 13px; padding: 12px 14px; }
+        .challenge-note { color: #7B78A8; display: block; font-size: 11px; margin-top: 12px; }
         .challenge-path { margin-top: 24px; max-width: 780px; }
         .challenge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; }
         .challenge-card { background: #141233; border: 1px solid rgba(155,92,246,.18); border-radius: 16px; padding: 16px; min-height: 160px; }
@@ -1187,6 +1217,7 @@ export default function CafeSofiaPrototipo() {
           .transp-grid { grid-template-columns: 1fr; }
           .section-title { font-size: 26px; }
           .challenge-grid, .agent-steps { grid-template-columns: 1fr; }
+          .circular-options { grid-template-columns: 1fr; }
           .challenge-card { min-height: auto; }
         }
       `}</style>
