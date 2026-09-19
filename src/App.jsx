@@ -23,6 +23,27 @@ const GASTOS = [
   { concepto: "Vasos y tapas", monto: 21000, fecha: "Ayer, 11:02" },
 ];
 
+const DESAFIOS = [
+  {
+    numero: "01",
+    titulo: "Reconocer una IA agéntica",
+    texto: "Una IA agéntica no solo responde: percibe el contexto, decide qué conviene y actúa sobre un objetivo.",
+    estado: "activo",
+  },
+  {
+    numero: "02",
+    titulo: "Verla operar un negocio",
+    texto: "Observa cómo SofIA consulta ventas, cuida el stock y respeta límites antes de actuar.",
+    estado: "siguiente",
+  },
+  {
+    numero: "03",
+    titulo: "Pensar como arquitecto",
+    texto: "El desafío final es imaginar qué agente construirías tú y para qué problema real.",
+    estado: "siguiente",
+  },
+];
+
 // ---------- Utilidades ----------
 const colones = (n) => "₡" + n.toLocaleString("es-CR");
 
@@ -67,6 +88,7 @@ function Bienvenida({ onStart }) {
         Café <span className="accent-gold">SofIA</span>
       </h1>
       <p className="hero-sub">El primer café del campus atendido por una inteligencia artificial.</p>
+      <p className="hero-purpose">Un café real dentro de ADEN donde cada visita también te enseña cómo piensa y actúa una IA agéntica.</p>
       <button className="btn-primary btn-xl" onClick={onStart}>
         Tocá para pedir <Sparkles size={20} style={{ marginLeft: 8 }} />
       </button>
@@ -603,6 +625,61 @@ function Pago({ carrito, onConfirmar, onVolver }) {
   );
 }
 
+// ---------- Pantalla: Desafíos ----------
+function Desafios({ onVolver }) {
+  const [respuesta, setRespuesta] = useState(null);
+  const correcta = respuesta === "percibe-decide-actua";
+
+  return (
+    <div className="screen">
+      <TopBar titulo="Desafíos" onVolver={onVolver} />
+      <div className="challenge-intro">
+        <span className="eyebrow">Café + formación</span>
+        <h1 className="section-title">Cada visita deja una idea nueva.</h1>
+        <p className="transp-intro">
+          SofIA gestiona un café real dentro de ADEN, pero su propósito va más allá de servir una taza: mostrarte qué es una inteligencia artificial agéntica y para qué construirla.
+        </p>
+      </div>
+
+      <div className="challenge-active">
+        <div className="challenge-label">Desafío 01 · En curso</div>
+        <h2>¿Qué hace agéntica a SofIA?</h2>
+        <p>Cuando falta un insumo, ¿cuál describe mejor lo que debería hacer SofIA?</p>
+        <div className="challenge-options">
+          <button className={`challenge-option ${respuesta === "solo-responde" ? "challenge-option-wrong" : ""}`} onClick={() => setRespuesta("solo-responde")}>
+            Responder qué producto falta.
+          </button>
+          <button className={`challenge-option ${correcta ? "challenge-option-correct" : ""}`} onClick={() => setRespuesta("percibe-decide-actua")}>
+            Percibirlo, decidir una reposición prudente y actuar respetando la caja.
+          </button>
+          <button className={`challenge-option ${respuesta === "compra-sin-limite" ? "challenge-option-wrong" : ""}`} onClick={() => setRespuesta("compra-sin-limite")}>
+            Comprar una cantidad enorme para no quedarse corta.
+          </button>
+        </div>
+        {respuesta && (
+          <p className={`challenge-feedback ${correcta ? "challenge-feedback-good" : ""}`}>
+            {correcta ? "Exacto. Una IA agéntica percibe, decide y actúa sobre un objetivo, con límites." : "Todavía no. La clave es que SofIA no solo responde: entiende el contexto y toma una acción responsable."}
+          </p>
+        )}
+      </div>
+
+      <div className="challenge-path">
+        <div className="tcard-label">El recorrido</div>
+        <div className="challenge-grid">
+          {DESAFIOS.map((desafio) => (
+            <div className={`challenge-card challenge-card-${desafio.estado}`} key={desafio.numero}>
+              <span className="challenge-number">{desafio.numero}</span>
+              <h3>{desafio.titulo}</h3>
+              <p>{desafio.texto}</p>
+              <span className="challenge-status">{desafio.estado === "activo" ? "En curso" : "Próximamente"}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Pantalla: Transparencia pública ----------
 function Transparencia({ menu, onVolver }) {
   const totalHoy = VENTAS_HOY.reduce((a, b) => a + b.monto, 0);
@@ -626,6 +703,15 @@ function Transparencia({ menu, onVolver }) {
           <div><strong>4. El equipo</strong><span>Confirma pagos, recibe reposiciones y prepara cada producto. La IA no manipula alimentos.</span></div>
         </div>
         <p className="project-note">Las claves de conexión no se exponen en el navegador. Si un dato no está disponible, SofIA debe decirlo en lugar de inventarlo.</p>
+      </div>
+      <div className="tcard agent-card">
+        <div className="tcard-label">Cómo aprende este café</div>
+        <div className="agent-steps">
+          <div><strong>01 · Percibe</strong><span>Consulta ventas, stock y pedidos reales.</span></div>
+          <div><strong>02 · Decide</strong><span>Evalúa qué acción ayuda al objetivo del café.</span></div>
+          <div><strong>03 · Actúa</strong><span>Registra, avisa o propone una reposición.</span></div>
+        </div>
+        <p className="project-note">SofIA no reemplaza al equipo humano: trabaja con datos, límites y transparencia.</p>
       </div>
       <div className="transp-grid">
         <div className="tcard">
@@ -715,6 +801,9 @@ function NavInferior({ pantalla, ir }) {
     <div className="nav-inferior">
       <button className={`nav-btn ${pantalla === "pedido" ? "nav-btn-activo" : ""}`} onClick={() => ir("pedido")}>
         <Coffee size={18} /> Pedir
+      </button>
+      <button className={`nav-btn ${pantalla === "desafios" ? "nav-btn-activo" : ""}`} onClick={() => ir("desafios")}>
+        <Sparkles size={18} /> Desafíos
       </button>
       <button
         className={`nav-btn ${pantalla === "transparencia" ? "nav-btn-activo" : ""}`}
@@ -958,6 +1047,7 @@ export default function CafeSofiaPrototipo() {
         .hero-title { font-family: 'Space Grotesk', sans-serif; font-size: 44px; font-weight: 700; margin: 10px 0 0; }
         .accent-gold { color: #F4C863; }
         .hero-sub { color: #B9B6E8; font-size: 16px; max-width: 420px; margin: 0; }
+        .hero-purpose { color: #D8D5F5; font-size: 13px; line-height: 1.5; max-width: 430px; margin: -4px 0 0; }
         .hero-hint { color: #7B78A8; font-size: 13px; margin-top: 6px; }
 
         .btn-primary {
@@ -972,6 +1062,28 @@ export default function CafeSofiaPrototipo() {
         .topbar-floating { position: absolute; top: 28px; left: 32px; margin: 0; }
         .back-btn { background: rgba(255,255,255,0.08); border: none; color: #EAE9FB; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .topbar-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600; }
+        .eyebrow { color: #F4C863; font-size: 11px; font-weight: 900; letter-spacing: 1.4px; text-transform: uppercase; }
+        .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 30px; line-height: 1.1; margin: 8px 0 10px; max-width: 560px; }
+        .challenge-intro { margin-bottom: 18px; }
+        .challenge-active { background: linear-gradient(135deg, #21194D, #141233); border: 1px solid rgba(244,200,99,.3); border-radius: 18px; padding: 20px; max-width: 780px; }
+        .challenge-label, .challenge-status { color: #F4C863; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+        .challenge-active h2 { font-family: 'Space Grotesk', sans-serif; font-size: 22px; margin: 8px 0; }
+        .challenge-active p { color: #B9B6E8; line-height: 1.5; margin: 0 0 14px; }
+        .challenge-options { display: grid; gap: 8px; }
+        .challenge-option { background: #1E1A45; border: 1px solid rgba(155,92,246,.25); border-radius: 10px; color: #EAE9FB; cursor: pointer; font: inherit; font-size: 13px; padding: 11px 13px; text-align: left; }
+        .challenge-option:hover { border-color: #F4C863; }
+        .challenge-option-correct { background: rgba(62,214,163,.16); border-color: #3ED6A3; }
+        .challenge-option-wrong { background: rgba(255,122,156,.12); border-color: #FF7A9C; }
+        .challenge-feedback { color: #FF7A9C !important; font-size: 13px; margin: 12px 0 0 !important; }
+        .challenge-feedback-good { color: #3ED6A3 !important; }
+        .challenge-path { margin-top: 24px; max-width: 780px; }
+        .challenge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; }
+        .challenge-card { background: #141233; border: 1px solid rgba(155,92,246,.18); border-radius: 16px; padding: 16px; min-height: 160px; }
+        .challenge-card-siguiente { opacity: .72; }
+        .challenge-number { color: #F4C863; font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; }
+        .challenge-card h3 { font-size: 15px; margin: 10px 0 7px; }
+        .challenge-card p { color: #9C9AC9; font-size: 12px; line-height: 1.45; margin: 0 0 14px; }
+        .challenge-status { font-size: 10px; }
 
         .pedido-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; flex: 1; min-height: 0; }
         .chat-col { display: flex; flex-direction: column; background: #141233; border: 1px solid rgba(155,92,246,0.18); border-radius: 20px; padding: 18px; min-height: 0; }
@@ -1033,6 +1145,11 @@ export default function CafeSofiaPrototipo() {
         .project-steps strong { color: #F4C863; font-size: 13px; }
         .project-steps span, .project-note { color: #9C9AC9; font-size: 12px; line-height: 1.45; }
         .project-note { border-top: 1px solid #221E48; margin: 14px 0 0; padding-top: 12px; }
+        .agent-card { margin-bottom: 16px; }
+        .agent-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .agent-steps div { display: flex; flex-direction: column; gap: 5px; }
+        .agent-steps strong { color: #F4C863; font-size: 13px; }
+        .agent-steps span { color: #9C9AC9; font-size: 12px; line-height: 1.45; }
         .transp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .tcard { background: #141233; border: 1px solid rgba(155,92,246,0.18); border-radius: 18px; padding: 16px; }
         .tcard-label { font-family: 'Space Grotesk', sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #B9B6E8; margin-bottom: 8px; }
@@ -1068,6 +1185,9 @@ export default function CafeSofiaPrototipo() {
           .pedido-layout { grid-template-columns: 1fr; }
           .project-steps { grid-template-columns: 1fr 1fr; }
           .transp-grid { grid-template-columns: 1fr; }
+          .section-title { font-size: 26px; }
+          .challenge-grid, .agent-steps { grid-template-columns: 1fr; }
+          .challenge-card { min-height: auto; }
         }
       `}</style>
 
@@ -1078,6 +1198,7 @@ export default function CafeSofiaPrototipo() {
       {pantalla === "pago" && (
         <Pago carrito={carrito} onConfirmar={irInicio} onVolver={() => setPantalla("pedido")} />
       )}
+      {pantalla === "desafios" && <Desafios onVolver={irInicio} />}
       {pantalla === "transparencia" && <Transparencia menu={menu} onVolver={irInicio} />}
 
       {catalogoError && <p className="qr-note">{catalogoError}</p>}
