@@ -23,6 +23,10 @@ const GASTOS = [
   { concepto: "Vasos y tapas", monto: 21000, fecha: "Ayer, 11:02" },
 ];
 
+const INGRESOS_DEMO = [
+  { concepto: "Ventas de café", monto: 231600, fecha: "Hoy" },
+];
+
 const DESAFIOS = [
   {
     numero: "01",
@@ -711,6 +715,8 @@ function Transparencia({ menu, onVolver }) {
   const maxVenta = Math.max(...VENTAS_HOY.map((v) => v.monto));
   const stockCritico = menu.filter((p) => p.stock <= 5);
   const totalGastos = GASTOS.reduce((a, b) => a + b.monto, 0);
+  const totalIngresos = INGRESOS_DEMO.reduce((a, b) => a + b.monto, 0);
+  const balance = totalIngresos - totalGastos;
 
   return (
     <div className="screen">
@@ -737,6 +743,30 @@ function Transparencia({ menu, onVolver }) {
           <div><strong>03 · Actúa</strong><span>Registra, avisa o propone una reposición.</span></div>
         </div>
         <p className="project-note">SofIA no reemplaza al equipo humano: trabaja con datos, límites y transparencia.</p>
+      </div>
+      <div className="finance-section">
+        <div className="finance-heading">
+          <div className="tcard-label">Resultado del café</div>
+          <span className="demo-label">Datos de demostración</span>
+        </div>
+        <div className="finance-grid">
+          <div className="tcard finance-card">
+            <span className="finance-label">Ingresos</span>
+            <strong className="finance-value finance-positive">{colones(totalIngresos)}</strong>
+            <span className="finance-note">Ventas registradas</span>
+          </div>
+          <div className="tcard finance-card">
+            <span className="finance-label">Gastos</span>
+            <strong className="finance-value">{colones(totalGastos)}</strong>
+            <span className="finance-note">Reposiciones y operación</span>
+          </div>
+          <div className="tcard finance-card finance-result">
+            <span className="finance-label">Balance operativo</span>
+            <strong className={`finance-value ${balance >= 0 ? "finance-positive" : "finance-negative"}`}>{colones(balance)}</strong>
+            <span className="finance-note">Ingresos menos gastos</span>
+          </div>
+        </div>
+        <p className="project-note">El balance no es una utilidad contable definitiva: no incluye impuestos, salarios ni otros costos que todavía no están cargados en este prototipo.</p>
       </div>
       <div className="transp-grid">
         <div className="tcard">
@@ -1180,6 +1210,17 @@ export default function CafeSofiaPrototipo() {
         .agent-steps div { display: flex; flex-direction: column; gap: 5px; }
         .agent-steps strong { color: #F4C863; font-size: 13px; }
         .agent-steps span { color: #9C9AC9; font-size: 12px; line-height: 1.45; }
+        .finance-section { margin-bottom: 16px; }
+        .finance-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .demo-label { color: #7B78A8; font-size: 11px; }
+        .finance-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .finance-card { display: flex; flex-direction: column; gap: 7px; }
+        .finance-label { color: #B9B6E8; font-size: 12px; }
+        .finance-value { color: #F4C863; font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; }
+        .finance-positive { color: #3ED6A3; }
+        .finance-negative { color: #FF7A9C; }
+        .finance-result { border-color: rgba(62,214,163,.32); }
+        .finance-note { color: #7B78A8; font-size: 11px; }
         .transp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .tcard { background: #141233; border: 1px solid rgba(155,92,246,0.18); border-radius: 18px; padding: 16px; }
         .tcard-label { font-family: 'Space Grotesk', sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #B9B6E8; margin-bottom: 8px; }
@@ -1218,6 +1259,8 @@ export default function CafeSofiaPrototipo() {
           .section-title { font-size: 26px; }
           .challenge-grid, .agent-steps { grid-template-columns: 1fr; }
           .circular-options { grid-template-columns: 1fr; }
+          .finance-grid { grid-template-columns: 1fr; }
+          .finance-heading { align-items: flex-start; flex-direction: column; gap: 2px; }
           .challenge-card { min-height: auto; }
         }
       `}</style>
