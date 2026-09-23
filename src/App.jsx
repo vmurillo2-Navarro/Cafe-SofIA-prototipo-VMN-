@@ -591,11 +591,11 @@ function Pago({ carrito, onConfirmar, onVolver }) {
       </div>
       <div className="payment-content">
         <div className="customer-form">
-          <p className="qr-hint">Déjanos tus datos para identificarte en futuras visitas.</p>
-          <input className="chat-input" type="text" placeholder="Nombre completo" value={cliente.nombre} onChange={buscarCliente} />
+          <p className="qr-hint">Completá tus datos para registrar el pedido y validar la transferencia.</p>
+          <input className="chat-input" type="text" placeholder="Nombre completo *" value={cliente.nombre} onChange={buscarCliente} required />
           {buscandoCliente && <span className="qr-note">Buscando tus datos…</span>}
-          <input className="chat-input" type="tel" placeholder="Teléfono" value={cliente.telefono} onChange={(event) => setCliente({ ...cliente, telefono: event.target.value })} />
-          <input className="chat-input" type="email" placeholder="Correo electrónico" value={cliente.email} onChange={(event) => setCliente({ ...cliente, email: event.target.value })} />
+          <input className="chat-input" type="tel" placeholder="Teléfono *" value={cliente.telefono} onChange={(event) => setCliente({ ...cliente, telefono: event.target.value })} required />
+          <input className="chat-input" type="email" placeholder="Correo electrónico *" value={cliente.email} onChange={(event) => setCliente({ ...cliente, email: event.target.value })} required />
           <label className="qr-note customer-consent">
             <input
               type="checkbox"
@@ -624,10 +624,10 @@ function Pago({ carrito, onConfirmar, onVolver }) {
             </>
           )}
           <div className="qr-total">{colones(total)}</div>
+          {error && <p className="checkout-error" role="alert">{error}</p>}
           <button className="btn-primary btn-xl" onClick={confirmarPago} disabled={enviando}>
             {enviando ? "Enviando…" : metodo === "transferencia" ? "Ya realicé la transferencia" : "Simular pago confirmado"}
           </button>
-          {error && <p className="qr-note">No se registró el pedido: {error}</p>}
           <p className="qr-note">
             {metodo === "transferencia" ? "La venta se registra cuando el administrador confirme el comprobante." : "En la versión real, esta pantalla se actualiza sola al detectar el pago."}
           </p>
@@ -1224,6 +1224,7 @@ export default function CafeSofiaPrototipo() {
         .qr-total { font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 700; margin: 8px 0 0; color: #F4C863; }
         .payment-summary .btn-xl { margin-top: 0; }
         .qr-note { color: #7B78A8; font-size: 12px; margin: 4px 0 0; }
+        .checkout-error { margin: 0; color: #FFB0C3; background: rgba(255,122,156,.13); border: 1px solid rgba(255,122,156,.45); border-radius: 8px; padding: 9px 10px; font-size: 12px; line-height: 1.35; }
 
         .check-circle { width: 90px; height: 90px; border-radius: 50%; background: #3ED6A3; display: flex; align-items: center; justify-content: center; }
         .confirm-title { font-family: 'Space Grotesk', sans-serif; margin: 4px 0; }
