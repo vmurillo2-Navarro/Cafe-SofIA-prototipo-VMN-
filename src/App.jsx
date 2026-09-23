@@ -669,10 +669,18 @@ function Pago({ carrito, onConfirmar, onVolver }) {
 function Desafios({ onVolver }) {
   const [respuesta, setRespuesta] = useState(null);
   const [retoCircular, setRetoCircular] = useState(false);
+  const [accionesCirculares, setAccionesCirculares] = useState([]);
   const correcta = respuesta === "percibe-decide-actua";
 
   function completarRetoCircular() {
+    if (!accionesCirculares.length) return;
     setRetoCircular(true);
+  }
+
+  function alternarAccionCircular(accion) {
+    setAccionesCirculares((actuales) => actuales.includes(accion)
+      ? actuales.filter((item) => item !== accion)
+      : [...actuales, accion]);
   }
 
   return (
@@ -713,12 +721,15 @@ function Desafios({ onVolver }) {
         <h2>Una acción pequeña también diseña el futuro.</h2>
         <p>Elegí una acción que puedas realizar hoy. SofIA registra tu avance en este dispositivo, sin inventar métricas ambientales.</p>
         {retoCircular ? (
-          <div className="circular-done">✓ Desafío completado. Sumaste 1 punto como aliado circular.</div>
+          <div className="circular-done">✓ Desafío completado. Registraste {accionesCirculares.length} {accionesCirculares.length === 1 ? "acción" : "acciones"} como aliado circular.</div>
         ) : (
-          <div className="challenge-options circular-options">
-            <button className="challenge-option" onClick={completarRetoCircular}>Traje mi vaso reutilizable.</button>
-            <button className="challenge-option" onClick={completarRetoCircular}>Elegí evitar un descartable innecesario.</button>
-          </div>
+          <>
+            <div className="challenge-options circular-options">
+              <button className={`challenge-option circular-option ${accionesCirculares.includes("vaso") ? "challenge-option-correct" : ""}`} aria-pressed={accionesCirculares.includes("vaso")} onClick={() => alternarAccionCircular("vaso")}>Traje mi vaso reutilizable.</button>
+              <button className={`challenge-option circular-option ${accionesCirculares.includes("descartable") ? "challenge-option-correct" : ""}`} aria-pressed={accionesCirculares.includes("descartable")} onClick={() => alternarAccionCircular("descartable")}>Elegí evitar un descartable innecesario.</button>
+            </div>
+            <button className="btn-primary circular-confirm" onClick={completarRetoCircular} disabled={!accionesCirculares.length}>Registrar {accionesCirculares.length ? `${accionesCirculares.length} ${accionesCirculares.length === 1 ? "acción" : "acciones"}` : "acciones"}</button>
+          </>
         )}
         <span className="challenge-note">Más adelante podremos sumar circuitos reales de retorno y reciclaje.</span>
       </div>
@@ -1208,6 +1219,9 @@ export default function CafeSofiaPrototipo() {
         .circular-challenge { margin-top: 16px; border-color: rgba(62,214,163,.35); background: linear-gradient(135deg, #123A38, #141233); }
         .circular-challenge-done { border-color: #3ED6A3; }
         .circular-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .circular-option { min-height: 58px; }
+        .circular-confirm { margin-top: 12px; padding: 10px 16px; }
+        .circular-confirm:disabled { cursor: not-allowed; opacity: .48; }
         .circular-done { background: rgba(62,214,163,.14); border: 1px solid rgba(62,214,163,.45); border-radius: 10px; color: #3ED6A3; font-size: 13px; padding: 12px 14px; }
         .challenge-note { color: #7B78A8; display: block; font-size: 11px; margin-top: 12px; }
         .challenge-path { margin-top: 24px; max-width: 780px; }
