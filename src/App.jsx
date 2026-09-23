@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Mic, Send, Coffee, ShoppingBag, BarChart3, QrCode, ArrowLeft, Sparkles, Check } from "lucide-react";
+import { Mic, Send, Coffee, ShoppingBag, BarChart3, QrCode, ArrowLeft, Sparkles, Check, Star } from "lucide-react";
 
 // ---------- Datos de ejemplo (placeholder, no reales) ----------
 const MENU = [
@@ -449,8 +449,12 @@ function Pedido({ menu, masVendido, carrito, setCarrito, onIrPago, onVolver }) {
         <div className="menu-col">
           <div className="menu-col-heading">
             <div className="menu-col-title">Carta de hoy</div>
-            {masVendido && <div className="top-seller"><span>Más pedido</span><strong>{masVendido.producto}</strong><small>{masVendido.vendidos} ventas</small></div>}
           </div>
+          {masVendido && <div className="top-seller" aria-label={`Producto estrella: ${masVendido.producto}, ${masVendido.vendidos} ventas`}>
+            <div className="top-seller-stars" aria-hidden="true"><Star size={16} fill="currentColor" /><Star size={22} fill="currentColor" /><Star size={16} fill="currentColor" /></div>
+            <div className="top-seller-copy"><span>Producto estrella</span><strong>{masVendido.producto}</strong></div>
+            <div className="top-seller-count"><strong>{masVendido.vendidos}</strong><span>ventas</span></div>
+          </div>}
           <div className="menu-grid">
             {menu.length === 0 && <p className="qr-note">Consultando el catálogo real…</p>}
             {menu.map((p) => (
@@ -1260,12 +1264,17 @@ export default function CafeSofiaPrototipo() {
         .chat-input::placeholder { color: #7B78A8; }
 
         .menu-col { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
-        .menu-col-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+        .menu-col-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
         .menu-col-title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #B9B6E8; }
-        .top-seller { display: flex; align-items: baseline; gap: 6px; color: #F4C863; font-size: 11px; min-width: 0; }
-        .top-seller span { color: #B9B6E8; text-transform: uppercase; font-size: 9px; font-weight: 900; letter-spacing: 1px; white-space: nowrap; }
-        .top-seller strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .top-seller small { color: #7B78A8; white-space: nowrap; }
+        .top-seller { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 10px 12px; background: linear-gradient(100deg, rgba(244,200,99,.18), rgba(155,92,246,.12)); border: 1px solid rgba(244,200,99,.46); border-radius: 10px; min-width: 0; }
+        .top-seller-stars { display: flex; align-items: center; color: #F4C863; flex-shrink: 0; gap: 1px; }
+        .top-seller-stars svg:nth-child(1), .top-seller-stars svg:nth-child(3) { opacity: .72; }
+        .top-seller-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+        .top-seller-copy span { color: #F4C863; text-transform: uppercase; font-size: 9px; font-weight: 900; letter-spacing: 1px; }
+        .top-seller-copy strong { color: #fff7d6; font-family: 'Space Grotesk', sans-serif; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .top-seller-count { display: flex; flex-direction: column; align-items: flex-end; color: #F4C863; flex-shrink: 0; }
+        .top-seller-count strong { font-family: 'Space Grotesk', sans-serif; font-size: 20px; line-height: 1; }
+        .top-seller-count span { color: #B9B6E8; font-size: 10px; }
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .menu-card { text-align: left; background: #141233; border: 1px solid rgba(155,92,246,0.18); border-radius: 16px; padding: 12px; cursor: pointer; color: #EAE9FB; font-family: inherit; }
         .menu-card:hover { border-color: #9B5CF6; }
