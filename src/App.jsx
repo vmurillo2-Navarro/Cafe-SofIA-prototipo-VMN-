@@ -551,13 +551,18 @@ function Pago({ carrito, onConfirmar, onVolver }) {
       if (!respuesta.ok || !resultado.ok) throw new Error(resultado.error || "No se pudieron buscar tus datos.");
       ultimoNombreBuscadoRef.current = nombreNormalizado;
       if (resultado.cliente) {
+        const clienteEncontrado = resultado.cliente;
+        const tipoCliente = ["estudiante", "academico_aden", "cliente_externo"].includes(String(clienteEncontrado.tipo_cliente))
+          ? String(clienteEncontrado.tipo_cliente)
+          : "";
         setCliente((actual) => ({
           ...actual,
-          ...resultado.cliente,
           nombre: actual.nombre,
-          tipo_cliente: resultado.cliente.tipo_cliente || actual.tipo_cliente,
+          telefono: String(clienteEncontrado.telefono || ""),
+          email: String(clienteEncontrado.email || "").toLowerCase(),
+          tipo_cliente: tipoCliente || actual.tipo_cliente,
         }));
-        setClienteReconocido({ ...resultado.cliente, recurrente: true });
+        setClienteReconocido({ nombre: String(clienteEncontrado.nombre || nombre), recurrente: true });
       } else {
         setClienteReconocido(null);
       }
