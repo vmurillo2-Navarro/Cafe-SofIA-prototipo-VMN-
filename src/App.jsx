@@ -503,6 +503,7 @@ function Pago({ carrito, onConfirmar, onVolver }) {
   const [metodo, setMetodo] = useState("transferencia");
   const [cliente, setCliente] = useState({ nombre: "", telefono: "", email: "", tipo_cliente: "", marketing_consentimiento: false });
   const [clienteReconocido, setClienteReconocido] = useState(null);
+  const [buscandoCliente, setBuscandoCliente] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
   const datosCompletos = Boolean(cliente.nombre.trim() && cliente.telefono.trim() && cliente.email.trim() && cliente.tipo_cliente);
@@ -533,6 +534,37 @@ function Pago({ carrito, onConfirmar, onVolver }) {
       setError(requestError.message);
     } finally {
       setEnviando(false);
+    }
+  }
+
+  async function buscarClienteFrecuente() {
+    const nombre = cliente.nombre.trim();
+    if (nombre.length < 3) return;
+    setBuscandoCliente(true);
+    setError("");
+    try {
+      const respuesta = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipo: "buscar_cliente", nombre }),
+      });
+      const resultado = await respuesta.json();
+      if (!respuesta.ok || !resultado.ok) throw new Error(resultado.error || "No se pudieron buscar tus datos.");
+      if (resultado.cliente) {
+        setCliente((actual) => ({
+          ...actual,
+          ...resultado.cliente,
+          nombre: actual.nombre,
+          tipo_cliente: resultado.cliente.tipo_cliente || actual.tipo_cliente,
+        }));
+        setClienteReconocido({ ...resultado.cliente, recurrente: true });
+      } else {
+        setClienteReconocido(null);
+      }
+    } catch (lookupError) {
+      setError("No pudimos buscar tus datos ahora. Podés completar el formulario manualmente.");
+    } finally {
+      setBuscandoCliente(false);
     }
   }
 
@@ -570,6 +602,8 @@ function Pago({ carrito, onConfirmar, onVolver }) {
         <div className="customer-form">
           <p className="qr-hint">Completá tus datos para registrar el pedido y validar la transferencia.</p>
           <input className="chat-input" type="text" placeholder="Nombre completo *" value={cliente.nombre} onChange={(event) => setCliente((actual) => ({ ...actual, nombre: event.target.value }))} required />
+          {cliente.nombre.trim().length >= 3 && <button className="customer-lookup" type="button" onClick={buscarClienteFrecuente} disabled={buscandoCliente}>{buscandoCliente ? "Buscando datos…" : "¿Ya compraste? Buscar mis datos"}</button>}
+          {clienteReconocido?.recurrente && <span className="customer-found">Datos de cliente frecuente encontrados.</span>}
           <input className="chat-input" type="tel" placeholder="Teléfono *" value={cliente.telefono} onChange={(event) => setCliente({ ...cliente, telefono: event.target.value })} required />
           <input className="chat-input" type="email" placeholder="Correo electrónico *" value={cliente.email} onChange={(event) => setCliente({ ...cliente, email: event.target.value })} required />
           <select className="customer-type" value={cliente.tipo_cliente} onChange={(event) => setCliente({ ...cliente, tipo_cliente: event.target.value })} required>
@@ -1250,6 +1284,9 @@ export default function CafeSofiaPrototipo() {
         .checkout-requirement { margin: 0; color: #B9B6E8; font-size: 12px; }
         .payment-summary .btn-primary:disabled { cursor: not-allowed; opacity: .48; }
         .customer-type { width: 100%; box-sizing: border-box; appearance: auto; background: #1A1740; border: 1px solid #2C2A55; border-radius: 999px; color: #EAE9FB; font: inherit; font-size: 14px; padding: 10px 16px; outline: none; }
+        .customer-lookup { justify-self: start; background: transparent; border: 0; color: #F4C863; cursor: pointer; font: inherit; font-size: 12px; font-weight: 700; padding: 0; text-align: left; }
+        .customer-lookup:disabled { cursor: wait; opacity: .65; }
+        .customer-found { color: #3ED6A3; font-size: 12px; }
 
         .check-circle { width: 90px; height: 90px; border-radius: 50%; background: #3ED6A3; display: flex; align-items: center; justify-content: center; }
         .confirm-title { font-family: 'Space Grotesk', sans-serif; margin: 4px 0; }
