@@ -899,17 +899,17 @@ function NavInferior({ pantalla, ir }) {
   if (pantalla === "bienvenida") return null;
   return (
     <div className="nav-inferior">
-      <button className={`nav-btn ${pantalla === "pedido" ? "nav-btn-activo" : ""}`} onClick={() => ir("pedido")}>
-        <Coffee size={18} /> Pedir
+      <button className={`store-nav-btn store-nav-order ${pantalla === "pedido" ? "store-nav-active" : ""}`} onClick={() => ir("pedido")}>
+        <Coffee size={21} /> <span>Pedir</span>
       </button>
-      <button className={`nav-btn ${pantalla === "desafios" ? "nav-btn-activo" : ""}`} onClick={() => ir("desafios")}>
-        <Sparkles size={18} /> Desafíos
+      <button className={`store-nav-btn store-nav-challenge ${pantalla === "desafios" ? "store-nav-active" : ""}`} onClick={() => ir("desafios")}>
+        <Sparkles size={21} /> <span>Desafíos</span>
       </button>
       <button
-        className={`nav-btn ${pantalla === "transparencia" ? "nav-btn-activo" : ""}`}
+        className={`store-nav-btn store-nav-transparency ${pantalla === "transparencia" ? "store-nav-active" : ""}`}
         onClick={() => ir("transparencia")}
       >
-        <BarChart3 size={18} /> Transparencia
+        <BarChart3 size={21} /> <span>Transparencia</span>
       </button>
     </div>
   );
@@ -1379,7 +1379,13 @@ export default function CafeSofiaPrototipo() {
         .estado-desc { font-size: 12px; color: #9C9AC9; margin-top: 4px; }
         .transp-footer { font-size: 11px; color: #565278; margin-top: 16px; text-align: center; }
 
-        .nav-inferior { display: flex; border-top: 1px solid rgba(155,92,246,0.15); }
+        .nav-inferior { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 10px 14px 14px; border-top: 1px solid rgba(155,92,246,0.15); background: rgba(8,7,25,.5); }
+        .store-nav-btn { min-height: 52px; border: 1px solid transparent; border-radius: 10px; color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; font: inherit; font-size: 14px; font-weight: 900; cursor: pointer; letter-spacing: 0; transition: transform .2s ease, filter .2s ease, border-color .2s ease; }
+        .store-nav-btn:hover { filter: brightness(1.16); transform: translateY(-1px); }
+        .store-nav-order { background: linear-gradient(135deg, #167a68, #1fa48c); }
+        .store-nav-challenge { background: linear-gradient(135deg, #83551a, #c59025); }
+        .store-nav-transparency { background: linear-gradient(135deg, #315b9b, #4e86c8); }
+        .store-nav-active { border-color: #fff7d6; box-shadow: 0 0 0 2px rgba(244,200,99,.24); }
         .nav-btn { flex: 1; background: none; border: none; color: #7B78A8; padding: 12px 0; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
         .nav-btn-activo { color: #F4C863; }
 
@@ -1397,6 +1403,9 @@ export default function CafeSofiaPrototipo() {
           .finance-grid { grid-template-columns: 1fr; }
           .finance-heading { align-items: flex-start; flex-direction: column; gap: 2px; }
           .challenge-card { min-height: auto; }
+          .nav-inferior { gap: 6px; padding: 8px; }
+          .store-nav-btn { min-height: 48px; font-size: 12px; gap: 5px; }
+          .store-nav-btn svg { width: 18px; height: 18px; }
         }
       `}</style>
 
