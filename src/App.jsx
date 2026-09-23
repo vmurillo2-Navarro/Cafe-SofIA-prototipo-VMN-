@@ -42,33 +42,37 @@ const DESAFIOS = [
 const colones = (n) => "₡" + n.toLocaleString("es-CR");
 
 function useOrbState(estado) {
-  // estado: idle | escuchando | pensando | hablando
+  // estado: dormida | ociosa | escuchando | pensando | hablando | feliz | alerta
   const cfg = {
-    idle: { color: "#6C68A6", scale: 1, speed: "4s" },
-    escuchando: { color: "#5AC8FA", scale: 1.06, speed: "1.6s" },
-    pensando: { color: "#F4C863", scale: 1.04, speed: "1s" },
-    hablando: { color: "#9B5CF6", scale: 1.12, speed: "0.6s" },
+    dormida: { label: "SofIA está dormida", color: "#49466f" },
+    ociosa: { label: "SofIA está disponible", color: "#6C68A6" },
+    idle: { label: "SofIA está disponible", color: "#6C68A6" },
+    escuchando: { label: "SofIA está escuchando", color: "#5AC8FA" },
+    pensando: { label: "SofIA está pensando", color: "#F4C863" },
+    hablando: { label: "SofIA está respondiendo", color: "#9B5CF6" },
+    feliz: { label: "SofIA está feliz", color: "#3ED6A3" },
+    alerta: { label: "SofIA requiere atención", color: "#FF7A9C" },
   };
-  return cfg[estado] || cfg.idle;
+  return cfg[estado] || cfg.ociosa;
 }
 
 // ---------- Orbe de SofIA ----------
-function Orbe({ estado = "idle", size = 96 }) {
+function Orbe({ estado = "ociosa", size = 96 }) {
   const s = useOrbState(estado);
   return (
     <div
+      className={`sofia-orb sofia-orb-${estado}`}
+      role="img"
+      aria-label={s.label}
       style={{
-        width: size,
-        height: size,
-        borderRadius: "50%",
-        background: `radial-gradient(circle at 35% 30%, ${s.color}, #16123a 75%)`,
-        boxShadow: `0 0 ${size * 0.5}px ${s.color}55, inset 0 0 ${size * 0.2}px rgba(255,255,255,0.15)`,
-        transform: `scale(${s.scale})`,
-        transition: "transform 0.5s ease, background 0.5s ease",
-        animation: `sofia-breathe ${s.speed} ease-in-out infinite`,
-        flexShrink: 0,
+        "--orb-color": s.color,
+        "--orb-size": `${size}px`,
       }}
-    />
+    >
+      <span className="sofia-orb-core" />
+      <span className="sofia-orb-orbit sofia-orb-orbit-one" />
+      <span className="sofia-orb-orbit sofia-orb-orbit-two" />
+    </div>
   );
 }
 
@@ -97,7 +101,7 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
     { de: "sofia", texto: "¡Hola! Soy SofIA. ¿Qué te gustaría tomar hoy? Puedo contarte qué tenemos disponible." },
   ]);
   const [input, setInput] = useState("");
-  const [estadoOrbe, setEstadoOrbe] = useState("idle");
+  const [estadoOrbe, setEstadoOrbe] = useState("ociosa");
   const [seleccion, setSeleccion] = useState(null);
   const [esperandoNombre, setEsperandoNombre] = useState(false);
   const esperandoNombreRef = useRef(false);
@@ -114,6 +118,12 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [mensajes]);
+
+  useEffect(() => {
+    if (estadoOrbe !== "ociosa" && estadoOrbe !== "idle") return undefined;
+    const descanso = window.setTimeout(() => setEstadoOrbe("dormida"), 90000);
+    return () => window.clearTimeout(descanso);
+  }, [estadoOrbe]);
 
   useEffect(() => {
     const ultimo = mensajes[mensajes.length - 1];
@@ -157,7 +167,8 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
         },
       ]);
       setEstadoOrbe("hablando");
-      setTimeout(() => setEstadoOrbe("idle"), 900);
+      setTimeout(() => setEstadoOrbe("feliz"), 900);
+      setTimeout(() => setEstadoOrbe("ociosa"), 1600);
     }, 500);
   }
 
@@ -354,7 +365,8 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
               "No estoy segura de haber entendido bien eso. Puedo contarte el menú, el stock, recomendarte algo, o sumar un producto directo a tu pedido — probá preguntarme o elegí una opción de abajo.",
           },
         ]);
-        setEstadoOrbe("idle");
+        setEstadoOrbe("alerta");
+        setTimeout(() => setEstadoOrbe("ociosa"), 1400);
       }
     }, 700);
   }
@@ -363,6 +375,8 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
     const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Reconocimiento) {
       setMensajes((m) => [...m, { de: "sofia", texto: "Tu navegador no habilita el micrófono. Puedes escribirme y te responderé igual." }]);
+      setEstadoOrbe("alerta");
+      setTimeout(() => setEstadoOrbe("ociosa"), 1400);
       return;
     }
     const reconocimiento = new Reconocimiento();
@@ -371,8 +385,11 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
     reconocimiento.maxAlternatives = 1;
     setEstadoOrbe("escuchando");
     reconocimiento.onresult = (event) => enviarTexto(event.results[0][0].transcript);
-    reconocimiento.onerror = () => setEstadoOrbe("idle");
-    reconocimiento.onend = () => setEstadoOrbe("idle");
+    reconocimiento.onerror = () => {
+      setEstadoOrbe("alerta");
+      setTimeout(() => setEstadoOrbe("ociosa"), 1400);
+    };
+    reconocimiento.onend = () => setEstadoOrbe("ociosa");
     reconocimiento.start();
   }
 
@@ -387,7 +404,8 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
       { de: "sofia", texto: `Perfecto, sumé un ${producto.nombre} (${colones(producto.precio)}). ¿Algo más?` },
     ]);
     setEstadoOrbe("hablando");
-    setTimeout(() => setEstadoOrbe("idle"), 900);
+    setTimeout(() => setEstadoOrbe("feliz"), 900);
+    setTimeout(() => setEstadoOrbe("ociosa"), 1600);
   }
 
   return (
@@ -396,11 +414,11 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
       <div className="pedido-layout">
         <div className="chat-col">
           <div className="chat-header">
-            <div className={`sofia-avatar sofia-avatar-${estadoOrbe}`} role="img" aria-label="SofIA, asistente de Café SofIA" />
+            <Orbe estado={estadoOrbe} size={56} />
             <div>
               <div className="chat-header-name">SofIA</div>
               <div className="chat-header-status">
-                {estadoOrbe === "pensando" ? "está pensando…" : estadoOrbe === "hablando" ? "respondiendo" : "esperando tu pedido"}
+                {estadoOrbe === "pensando" ? "está pensando…" : estadoOrbe === "hablando" ? "respondiendo" : estadoOrbe === "escuchando" ? "escuchando" : estadoOrbe === "dormida" ? "en espera" : "esperando tu pedido"}
               </div>
             </div>
           </div>
@@ -864,6 +882,7 @@ function Admin() {
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
+  const [seccion, setSeccion] = useState("resumen");
 
   async function cargarDatos(clave = password) {
     setCargando(true);
@@ -937,107 +956,75 @@ function Admin() {
   const reposicionRecomendada = datos?.reposicion_recomendada || [];
   const finanzas = datos?.finanzas || { ingresos: 0, gastos: 0, balance: 0, ventas_registradas: 0, aclaracion: "" };
   return (
-    <div className="app-root">
-      <style>{`.app-root{font-family:Lato,sans-serif;background:linear-gradient(180deg,#0B0A1F 0%,#120E33 45%,#0B0A1F 100%);color:#EAE9FB;min-height:100vh;width:100%;display:flex;flex-direction:column}.screen{width:100%;max-width:1100px;box-sizing:border-box;margin:0 auto;padding:28px 32px;position:relative}.topbar{display:flex;align-items:center;gap:12px;margin-bottom:22px}.back-btn{background:rgba(255,255,255,.08);border:0;color:#EAE9FB;width:38px;height:38px;border-radius:50%;cursor:pointer}.topbar-title{font-family:Space Grotesk,sans-serif;font-size:22px;font-weight:700}.transp-intro{color:#B9B6E8;font-size:14px;margin-bottom:18px}.transp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.tcard{background:#141233;border:1px solid rgba(155,92,246,.18);border-radius:18px;padding:18px;min-width:0}.tcard-label{font-family:Space Grotesk,sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#B9B6E8;margin-bottom:12px}.tcard p{margin:8px 0;color:#EAE9FB}.gasto-row{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;padding:10px 0;border-bottom:1px solid #2C2A55}.gasto-row:last-child{border-bottom:0}.nav-btn{background:#1E1A45;border:1px solid rgba(155,92,246,.25);color:#EAE9FB;border-radius:10px;padding:8px 12px;cursor:pointer;font-family:inherit;font-size:12px}.nav-btn:hover{border-color:#9B5CF6}.btn-primary{background:linear-gradient(120deg,#7C3AED,#9B5CF6);color:#fff;border:0;border-radius:999px;font-weight:700;cursor:pointer;padding:12px 20px;margin-top:20px}.btn-xl{font-size:15px;padding:13px 24px}.admin-finance{margin:16px 0}.admin-finance-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.admin-finance-card{display:flex;flex-direction:column;gap:6px}.admin-finance-label{color:#B9B6E8;font-size:12px}.admin-finance-value{color:#F4C863;font-family:Space Grotesk,sans-serif;font-size:24px;font-weight:700}.admin-finance-positive{color:#3ED6A3}.admin-finance-negative{color:#FF7A9C}.admin-finance-note{color:#7B78A8;font-size:11px}@media(max-width:720px){.screen{padding:20px 16px}.transp-grid{grid-template-columns:1fr}.gasto-row{align-items:flex-start;flex-direction:column}.admin-finance-grid{grid-template-columns:1fr}}`}</style>
-      <div className="screen">
+    <>
+      <style>{`
+        .app-root { font-family: Lato, sans-serif; background: linear-gradient(180deg, #0B0A1F 0%, #120E33 45%, #0B0A1F 100%); color: #EAE9FB; min-height: 100vh; width: 100%; display: flex; flex-direction: column; }
+        .screen { width: 100%; max-width: 1100px; box-sizing: border-box; margin: 0 auto; padding: 28px 32px; position: relative; }
+        .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+        .back-btn { background: rgba(255,255,255,.08); border: 0; color: #EAE9FB; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; }
+        .topbar-title { font-family: Space Grotesk, sans-serif; font-size: 22px; font-weight: 700; }
+        .tcard { background: #141233; border: 1px solid rgba(155,92,246,.18); border-radius: 18px; padding: 18px; min-width: 0; }
+        .tcard-label { font-family: Space Grotesk, sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #B9B6E8; margin-bottom: 12px; }
+        .tcard p { margin: 8px 0; color: #EAE9FB; }
+        .transp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+        .gasto-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 13px; padding: 10px 0; border-bottom: 1px solid #2C2A55; }
+        .nav-btn { background: #1E1A45; border: 1px solid rgba(155,92,246,.25); color: #EAE9FB; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-family: inherit; font-size: 12px; }
+        .btn-primary { background: linear-gradient(120deg, #7C3AED, #9B5CF6); color: #fff; border: 0; border-radius: 999px; font-weight: 700; cursor: pointer; padding: 12px 20px; }
+        .mode-toggle { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+        .admin-finance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        .admin-finance-card { display: flex; flex-direction: column; gap: 6px; }
+        .admin-finance-label, .admin-finance-note, .qr-note { color: #7B78A8; font-size: 12px; }
+        .admin-finance-value { color: #F4C863; font-family: Space Grotesk, sans-serif; font-size: 24px; font-weight: 700; }
+        .admin-finance-positive { color: #3ED6A3; }
+        .admin-finance-negative, .stock-alert { color: #FF7A9C; }
+        @media (min-width: 721px) {
+          .app-root { height: 100dvh; min-height: 0; overflow: hidden; }
+          .admin-screen { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 20px 28px; overflow: hidden; }
+          .admin-shell { min-height: 0; display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 16px; }
+          .admin-tabs { display: flex; flex-direction: column; gap: 6px; padding: 8px; background: #141233; border: 1px solid rgba(155,92,246,.18); border-radius: 12px; }
+          .admin-tabs .nav-btn { flex: 0; justify-content: flex-start; }
+          .admin-tab-active { background: #2c225e !important; color: #F4C863 !important; }
+          .admin-panel { min-height: 0; overflow: auto; padding-right: 4px; }
+          .admin-panel .transp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .admin-panel .tcard { border-radius: 12px; }
+          .admin-mode { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+          .admin-finance { margin: 0 0 12px; }
+          .admin-finance .qr-note { display: none; }
+          .admin-refresh { margin: auto 0 0; width: 100%; }
+        }
+        @media (max-width: 720px) {
+          .admin-screen { padding: 28px 20px; }
+          .admin-shell { display: block; }
+          .admin-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 16px; }
+          .admin-tabs .nav-btn { flex: 1 0 auto; }
+          .admin-panel .transp-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        }
+      `}</style>
+      <div className="app-root">
+      <div className="screen admin-screen">
         <TopBar titulo="Trastienda" onVolver={() => { window.location.href = "/"; }} />
-        <p className="transp-intro">Cafés, insumos, stock y transferencias pendientes.</p>
-        <div className="tcard">
-          <div className="tcard-label">Modo real</div>
-          <label className="mode-toggle">
-            <input type="checkbox" checked={Boolean(datos.modo_real)} onChange={cambiarModoReal} disabled={cargando} />
-            <span>{datos.modo_real ? "Activo" : "Apagado"}</span>
-          </label>
-          <p className="qr-note">Apagado = simulador. Activo = ventas y reloj reales.</p>
-        </div>
-        <div className="tcard admin-finance">
-          <div className="tcard-label">Resultado financiero operativo</div>
-          <div className="admin-finance-grid">
-            <div className="admin-finance-card">
-              <span className="admin-finance-label">Ingresos</span>
-              <strong className="admin-finance-value admin-finance-positive">{colones(Number(finanzas.ingresos) || 0)}</strong>
-              <span className="admin-finance-note">{finanzas.ventas_registradas || 0} ventas registradas</span>
-            </div>
-            <div className="admin-finance-card">
-              <span className="admin-finance-label">Gastos</span>
-              <strong className="admin-finance-value">{colones(Number(finanzas.gastos) || 0)}</strong>
-              <span className="admin-finance-note">Egresos registrados en caja</span>
-            </div>
-            <div className="admin-finance-card">
-              <span className="admin-finance-label">Balance operativo</span>
-              <strong className={`admin-finance-value ${(Number(finanzas.balance) || 0) >= 0 ? "admin-finance-positive" : "admin-finance-negative"}`}>
-                {colones(Number(finanzas.balance) || 0)}
-              </strong>
-              <span className="admin-finance-note">Ingresos menos gastos</span>
-            </div>
-          </div>
-          {finanzas.aclaracion && <p className="qr-note">{finanzas.aclaracion}</p>}
-        </div>
-        <div className="transp-grid">
-          <div className="tcard">
-            <div className="tcard-label">Cafés</div>
-            {(datos.carta || []).map((item) => <p key={item.id_item}>{item.nombre} · {colones(item.precio)}</p>)}
-          </div>
-          <div className="tcard">
-            <div className="tcard-label">Insumos y stock</div>
-            {(datos.insumos || []).map((item) => {
-              const bajo = Boolean(item.alerta_disparada) || Number(item.stock) <= Number(item.umbral_min);
-              return (
-                <p key={item.id_insumo}>
-                  {item.nombre}: {item.stock}
-                  {bajo && <strong className="stock-alert"> · Stock bajo</strong>}
-                </p>
-              );
-            })}
-          </div>
-          <div className="tcard">
-            <div className="tcard-label">Reposición recomendada</div>
-            {reposicionRecomendada.length === 0 && <p>No hay insumos nuevos para pedir.</p>}
-            {reposicionRecomendada.map((item) => (
-              <div className="gasto-row" key={item.id_insumo}>
-                <span>{item.nombre}: pedir {item.cantidad_sugerida} unidades</span>
-                <span>stock {item.stock}/{item.umbral_min}</span>
-              </div>
+        <div className="admin-shell">
+          <aside className="admin-tabs" aria-label="Secciones de la trastienda">
+            {[['resumen', 'Resumen'], ['inventario', 'Inventario'], ['cobros', `Cobros (${transferencias.length})`], ['proveedores', `Proveedores (${pedidosProveedor.length})`]].map(([id, etiqueta]) => (
+              <button key={id} className={`nav-btn ${seccion === id ? 'admin-tab-active' : ''}`} onClick={() => setSeccion(id)}>{etiqueta}</button>
             ))}
-            {reposicionRecomendada.length > 0 && (
-              <button className="btn-primary" onClick={() => ejecutar("admin_run_restock", {})} disabled={cargando || !datos.modo_real}>
-                {datos.modo_real ? "Solicitar reposición" : "Activar modo real para pedir"}
-              </button>
-            )}
-          </div>
-          <div className="tcard">
-            <div className="tcard-label">Transferencias pendientes</div>
-            {transferencias.length === 0 && <p>No hay transferencias pendientes.</p>}
-            {transferencias.map((item) => (
-              <div className="gasto-row" key={item.orderId}>
-                <span>{item.orderId} · {colones(Number(item.monto) || 0)}</span>
-                <span>
-                  <button className="nav-btn" onClick={() => ejecutar("admin_confirm_transfer", { orderId: item.orderId })}>Confirmar</button>
-                  <button className="nav-btn" onClick={() => ejecutar("admin_discard_transfer", { orderId: item.orderId })}>Descartar</button>
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="tcard">
-            <div className="tcard-label">Pedidos al proveedor</div>
-            {pedidosProveedor.length === 0 && <p>No hay pedidos pendientes.</p>}
-            {pedidosProveedor.map((item) => (
-              <div className="gasto-row" key={item.pedido_id}>
-                <span>{item.nombre} · {item.cantidad} {item.unidad} · {colones(Number(item.costo_total) || 0)}</span>
-                <span>
-                  <button className="nav-btn" onClick={() => confirmarPedidoProveedor(item)}>Recibido</button>
-                  <button className="nav-btn" onClick={() => ejecutar("admin_cancel_supplier_order", { pedidoId: item.pedido_id })}>Cancelar</button>
-                </span>
-              </div>
-            ))}
-          </div>
+            <button className="btn-primary admin-refresh" onClick={() => cargarDatos()} disabled={cargando}>{cargando ? "Actualizando…" : "Actualizar"}</button>
+          </aside>
+          <main className="admin-panel">
+            {seccion === "resumen" && <>
+              <div className="tcard admin-mode"><div><div className="tcard-label">Modo real</div><p className="qr-note">Apagado = simulador. Activo = ventas y reloj reales.</p></div><label className="mode-toggle"><input type="checkbox" checked={Boolean(datos.modo_real)} onChange={cambiarModoReal} disabled={cargando} /><span>{datos.modo_real ? "Activo" : "Apagado"}</span></label></div>
+              <div className="tcard admin-finance"><div className="tcard-label">Resultado financiero operativo</div><div className="admin-finance-grid"><div className="admin-finance-card"><span className="admin-finance-label">Ingresos</span><strong className="admin-finance-value admin-finance-positive">{colones(Number(finanzas.ingresos) || 0)}</strong><span className="admin-finance-note">{finanzas.ventas_registradas || 0} ventas</span></div><div className="admin-finance-card"><span className="admin-finance-label">Gastos</span><strong className="admin-finance-value">{colones(Number(finanzas.gastos) || 0)}</strong><span className="admin-finance-note">Egresos en caja</span></div><div className="admin-finance-card"><span className="admin-finance-label">Balance</span><strong className={`admin-finance-value ${(Number(finanzas.balance) || 0) >= 0 ? "admin-finance-positive" : "admin-finance-negative"}`}>{colones(Number(finanzas.balance) || 0)}</strong><span className="admin-finance-note">Ingresos menos gastos</span></div></div></div>
+              <div className="transp-grid"><div className="tcard"><div className="tcard-label">Estado operativo</div><p>{reposicionRecomendada.length ? `${reposicionRecomendada.length} reposiciones requieren atención.` : "El inventario está dentro de los umbrales."}</p></div><div className="tcard"><div className="tcard-label">Pendientes</div><p>{transferencias.length} cobros y {pedidosProveedor.length} pedidos al proveedor por resolver.</p></div></div>
+            </>}
+            {seccion === "inventario" && <div className="transp-grid"><div className="tcard"><div className="tcard-label">Carta activa</div>{(datos.carta || []).map((item) => <p key={item.id_item}>{item.nombre} · {colones(item.precio)}</p>)}</div><div className="tcard"><div className="tcard-label">Insumos y stock</div>{(datos.insumos || []).map((item) => { const bajo = Boolean(item.alerta_disparada) || Number(item.stock) <= Number(item.umbral_min); return <p key={item.id_insumo}>{item.nombre}: {item.stock}{bajo && <strong className="stock-alert"> · Stock bajo</strong>}</p>; })}</div></div>}
+            {seccion === "cobros" && <div className="tcard"><div className="tcard-label">Transferencias pendientes</div>{transferencias.length === 0 && <p>No hay transferencias pendientes.</p>}{transferencias.map((item) => <div className="gasto-row" key={item.orderId}><span>{item.orderId} · {colones(Number(item.monto) || 0)}</span><span><button className="nav-btn" onClick={() => ejecutar("admin_confirm_transfer", { orderId: item.orderId })}>Confirmar</button><button className="nav-btn" onClick={() => ejecutar("admin_discard_transfer", { orderId: item.orderId })}>Descartar</button></span></div>)}</div>}
+            {seccion === "proveedores" && <div className="transp-grid"><div className="tcard"><div className="tcard-label">Reposición recomendada</div>{reposicionRecomendada.length === 0 && <p>No hay insumos nuevos para pedir.</p>}{reposicionRecomendada.map((item) => <div className="gasto-row" key={item.id_insumo}><span>{item.nombre}: pedir {item.cantidad_sugerida}</span><span>stock {item.stock}/{item.umbral_min}</span></div>)}{reposicionRecomendada.length > 0 && <button className="btn-primary" onClick={() => ejecutar("admin_run_restock", {})} disabled={cargando || !datos.modo_real}>{datos.modo_real ? "Solicitar reposición" : "Activar modo real para pedir"}</button>}</div><div className="tcard"><div className="tcard-label">Pedidos al proveedor</div>{pedidosProveedor.length === 0 && <p>No hay pedidos pendientes.</p>}{pedidosProveedor.map((item) => <div className="gasto-row" key={item.pedido_id}><span>{item.nombre} · {item.cantidad} {item.unidad} · {colones(Number(item.costo_total) || 0)}</span><span><button className="nav-btn" onClick={() => confirmarPedidoProveedor(item)}>Recibido</button><button className="nav-btn" onClick={() => ejecutar("admin_cancel_supplier_order", { pedidoId: item.pedido_id })}>Cancelar</button></span></div>)}</div></div>}
+            {error && <p className="qr-note">{error}</p>}
+          </main>
         </div>
-        {error && <p className="qr-note">{error}</p>}
-        <button className="btn-primary btn-xl" onClick={() => cargarDatos()} disabled={cargando}>
-          {cargando ? "Actualizando…" : "Actualizar"}
-        </button>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -1089,6 +1076,10 @@ export default function CafeSofiaPrototipo() {
           display: flex;
           flex-direction: column;
           position: relative;
+        }
+        @media (min-width: 721px) {
+          .app-root { height: 100dvh; min-height: 0; border-radius: 0; overflow: hidden; }
+          .screen { min-height: 0; overflow: hidden; }
         }
         @keyframes sofia-breathe {
           0%, 100% { filter: brightness(1); }
@@ -1162,11 +1153,36 @@ export default function CafeSofiaPrototipo() {
         .pedido-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; flex: 1; min-height: 0; }
         .chat-col { display: flex; flex-direction: column; background: #141233; border: 1px solid rgba(155,92,246,0.18); border-radius: 20px; padding: 18px; min-height: 0; }
         .chat-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .sofia-orb { --orb-color: #6C68A6; --orb-size: 56px; width: var(--orb-size); height: var(--orb-size); position: relative; flex: 0 0 var(--orb-size); display: grid; place-items: center; border-radius: 50%; isolation: isolate; animation: orb-breathe 4s ease-in-out infinite; }
+        .sofia-orb-core { width: 72%; height: 72%; border-radius: 50%; background: radial-gradient(circle at 34% 28%, #fff 0%, var(--orb-color) 20%, #171431 74%); box-shadow: 0 0 16px color-mix(in srgb, var(--orb-color) 72%, transparent), inset 0 0 10px rgba(255,255,255,.18); transition: background .35s ease, box-shadow .35s ease; }
+        .sofia-orb-orbit { position: absolute; width: 100%; height: 100%; border: 1px solid color-mix(in srgb, var(--orb-color) 45%, transparent); border-radius: 46% 54% 48% 52%; opacity: 0; pointer-events: none; }
+        .sofia-orb-orbit-two { width: 82%; height: 82%; border-style: dashed; }
+        .sofia-orb-dormida { opacity: .58; transform: scale(.88); animation: orb-sleep 5s ease-in-out infinite; }
+        .sofia-orb-ociosa, .sofia-orb-idle { animation: orb-breathe 4s ease-in-out infinite; }
+        .sofia-orb-escuchando { animation: orb-listen 1.3s ease-in-out infinite; }
+        .sofia-orb-escuchando .sofia-orb-orbit { opacity: .7; animation: orb-listen-ring 1.3s ease-out infinite; }
+        .sofia-orb-pensando { animation: orb-think 1.2s ease-in-out infinite; }
+        .sofia-orb-pensando .sofia-orb-orbit { opacity: .9; animation: orb-orbit 1.5s linear infinite; }
+        .sofia-orb-pensando .sofia-orb-orbit-two { animation-direction: reverse; animation-duration: 1.05s; }
+        .sofia-orb-hablando { animation: orb-speak .58s ease-in-out infinite; }
+        .sofia-orb-hablando .sofia-orb-core { box-shadow: 0 0 24px color-mix(in srgb, var(--orb-color) 86%, transparent), inset 0 0 12px rgba(255,255,255,.24); }
+        .sofia-orb-feliz { animation: orb-happy .7s ease-in-out 2; }
+        .sofia-orb-alerta { animation: orb-alert .7s ease-in-out 2; }
+        @keyframes orb-breathe { 0%, 100% { transform: scale(1); filter: brightness(.95); } 50% { transform: scale(1.055); filter: brightness(1.2); } }
+        @keyframes orb-sleep { 0%, 100% { transform: scale(.88); filter: brightness(.7); } 50% { transform: scale(.94); filter: brightness(.92); } }
+        @keyframes orb-listen { 0%, 100% { transform: scale(1.03); } 50% { transform: scale(1.13); } }
+        @keyframes orb-listen-ring { 0% { transform: scale(.72); opacity: .85; } 100% { transform: scale(1.26); opacity: 0; } }
+        @keyframes orb-think { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.075) rotate(2deg); } }
+        @keyframes orb-orbit { to { transform: rotate(360deg); } }
+        @keyframes orb-speak { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.14); filter: brightness(1.35); } }
+        @keyframes orb-happy { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.18) translateY(-3px); } 70% { transform: scale(.98) translateY(0); } }
+        @keyframes orb-alert { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px) scale(1.06); } 75% { transform: translateX(5px) scale(1.06); } }
         .sofia-avatar { width: 56px; height: 56px; flex-shrink: 0; border-radius: 50%; background-image: linear-gradient(180deg, rgba(8, 9, 31, 0.04), rgba(8, 9, 31, 0.34)), url("https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=240&q=85"); background-position: center; background-size: cover; border: 2px solid rgba(244, 200, 99, 0.72); box-shadow: 0 0 18px rgba(244, 200, 99, 0.24); transition: transform 0.5s ease, box-shadow 0.5s ease, border-color 0.5s ease; animation: sofia-breathe 4s ease-in-out infinite; }
         .sofia-avatar-escuchando { border-color: #5AC8FA; box-shadow: 0 0 20px rgba(90, 200, 250, 0.48); transform: scale(1.06); }
         .sofia-avatar-pensando { border-color: #F4C863; box-shadow: 0 0 20px rgba(244, 200, 99, 0.5); transform: scale(1.04); }
         .sofia-avatar-hablando { border-color: #9B5CF6; box-shadow: 0 0 22px rgba(155, 92, 246, 0.55); transform: scale(1.1); }
         .transparency-avatar { width: 64px; height: 64px; animation: none; }
+        @media (prefers-reduced-motion: reduce) { .sofia-orb, .sofia-orb *, .sofia-avatar { animation: none !important; } }
         .chat-header-name { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16px; }
         .chat-header-status { font-size: 12px; color: #8683B0; }
         .chat-msgs { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px; min-height: 120px; }
