@@ -1164,6 +1164,31 @@ export default function CafeSofiaPrototipo() {
         @media (min-width: 721px) {
           .app-root { height: 100dvh; min-height: 0; border-radius: 0; overflow: hidden; }
           .screen { min-height: 0; overflow: hidden; }
+          .pedido-layout { gap: 16px; }
+          .pedido-layout .chat-col { padding: 14px; border-radius: 14px; }
+          .pedido-layout .chat-header { margin-bottom: 8px; }
+          .pedido-layout .chat-msgs { min-height: 0; }
+          .pedido-layout .msg { font-size: 12px; padding: 7px 10px; }
+          .pedido-layout .chat-input-row { margin-top: 8px; }
+          .pedido-layout .mic-btn, .pedido-layout .send-btn { width: 36px; height: 36px; }
+          .pedido-layout .chat-input { font-size: 13px; padding: 8px 13px; }
+          .pedido-layout .menu-col-heading { margin-bottom: 5px; }
+          .pedido-layout .menu-col-title { font-size: 11px; }
+          .pedido-layout .top-seller { margin-bottom: 8px; padding: 7px 9px; gap: 8px; }
+          .pedido-layout .top-seller-stars svg { width: 14px; height: 14px; }
+          .pedido-layout .top-seller-stars svg:nth-child(2) { width: 18px; height: 18px; }
+          .pedido-layout .top-seller-copy strong { font-size: 13px; }
+          .pedido-layout .top-seller-count strong { font-size: 16px; }
+          .pedido-layout .menu-grid { gap: 7px; }
+          .pedido-layout .menu-card { border-radius: 10px; padding: 8px; }
+          .pedido-layout .menu-card-name, .pedido-layout .menu-card-price { font-size: 12px; }
+          .pedido-layout .menu-card-desc { font-size: 10px; line-height: 1.25; margin: 3px 0 5px; }
+          .pedido-layout .tag-bajo { font-size: 8px; }
+          .pedido-layout .carrito-box { margin-top: 9px; border-radius: 10px; padding: 9px; }
+          .pedido-layout .carrito-title { font-size: 13px; margin-bottom: 5px; }
+          .pedido-layout .carrito-vacio, .pedido-layout .carrito-item { font-size: 11px; }
+          .pedido-layout .carrito-total { font-size: 13px; margin-top: 5px; padding-top: 5px; }
+          .pedido-layout .btn-full { margin-top: 7px; padding: 9px 0; font-size: 13px; }
         }
         @keyframes sofia-breathe {
           0%, 100% { filter: brightness(1); }
