@@ -506,6 +506,7 @@ function Pago({ carrito, onConfirmar, onVolver }) {
   const [buscandoCliente, setBuscandoCliente] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
+  const datosCompletos = Boolean(cliente.nombre.trim() && cliente.telefono.trim() && cliente.email.trim());
 
   async function confirmarPago() {
     if (!cliente.nombre.trim() || !cliente.telefono.trim() || !cliente.email.trim()) {
@@ -625,8 +626,9 @@ function Pago({ carrito, onConfirmar, onVolver }) {
           )}
           <div className="qr-total">{colones(total)}</div>
           {error && <p className="checkout-error" role="alert">{error}</p>}
-          <button className="btn-primary btn-xl" onClick={confirmarPago} disabled={enviando}>
-            {enviando ? "Enviando…" : metodo === "transferencia" ? "Ya realicé la transferencia" : "Simular pago confirmado"}
+          {!datosCompletos && <p className="checkout-requirement">Completá nombre, teléfono y correo para continuar.</p>}
+          <button className="btn-primary btn-xl" onClick={confirmarPago} disabled={enviando || !datosCompletos}>
+            {enviando ? "Registrando pedido…" : metodo === "transferencia" ? "Ya realicé la transferencia" : "Simular pago confirmado"}
           </button>
           <p className="qr-note">
             {metodo === "transferencia" ? "La venta se registra cuando el administrador confirme el comprobante." : "En la versión real, esta pantalla se actualiza sola al detectar el pago."}
@@ -1225,6 +1227,8 @@ export default function CafeSofiaPrototipo() {
         .payment-summary .btn-xl { margin-top: 0; }
         .qr-note { color: #7B78A8; font-size: 12px; margin: 4px 0 0; }
         .checkout-error { margin: 0; color: #FFB0C3; background: rgba(255,122,156,.13); border: 1px solid rgba(255,122,156,.45); border-radius: 8px; padding: 9px 10px; font-size: 12px; line-height: 1.35; }
+        .checkout-requirement { margin: 0; color: #B9B6E8; font-size: 12px; }
+        .payment-summary .btn-primary:disabled { cursor: not-allowed; opacity: .48; }
 
         .check-circle { width: 90px; height: 90px; border-radius: 50%; background: #3ED6A3; display: flex; align-items: center; justify-content: center; }
         .confirm-title { font-family: 'Space Grotesk', sans-serif; margin: 4px 0; }
