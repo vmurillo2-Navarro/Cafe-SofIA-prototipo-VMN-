@@ -537,9 +537,8 @@ function Pago({ carrito, onConfirmar, onVolver }) {
     }
   }
 
-  async function buscarCliente(event) {
-    const nombre = event.target.value;
-    setCliente({ ...cliente, nombre });
+  async function buscarCliente() {
+    const nombre = cliente.nombre.trim();
     if (nombre.trim().length < 3) return;
     setBuscandoCliente(true);
     try {
@@ -550,7 +549,12 @@ function Pago({ carrito, onConfirmar, onVolver }) {
       });
       const resultado = await respuesta.json();
       if (resultado.ok && resultado.cliente) {
-        setCliente((actual) => ({ ...actual, ...resultado.cliente, nombre }));
+        setCliente((actual) => ({
+          ...actual,
+          ...resultado.cliente,
+          nombre: actual.nombre,
+          tipo_cliente: actual.tipo_cliente || resultado.cliente.tipo_cliente || "",
+        }));
         setClienteReconocido({ ...resultado.cliente, recurrente: true });
       }
     } catch (lookupError) {
@@ -593,7 +597,7 @@ function Pago({ carrito, onConfirmar, onVolver }) {
       <div className="payment-content">
         <div className="customer-form">
           <p className="qr-hint">Completá tus datos para registrar el pedido y validar la transferencia.</p>
-          <input className="chat-input" type="text" placeholder="Nombre completo *" value={cliente.nombre} onChange={buscarCliente} required />
+          <input className="chat-input" type="text" placeholder="Nombre completo *" value={cliente.nombre} onChange={(event) => setCliente((actual) => ({ ...actual, nombre: event.target.value }))} onBlur={buscarCliente} required />
           {buscandoCliente && <span className="qr-note">Buscando tus datos…</span>}
           <input className="chat-input" type="tel" placeholder="Teléfono *" value={cliente.telefono} onChange={(event) => setCliente({ ...cliente, telefono: event.target.value })} required />
           <input className="chat-input" type="email" placeholder="Correo electrónico *" value={cliente.email} onChange={(event) => setCliente({ ...cliente, email: event.target.value })} required />
