@@ -501,16 +501,16 @@ function Pago({ carrito, onConfirmar, onVolver }) {
   const total = carrito.reduce((acc, item) => acc + item.precio * item.qty, 0);
   const [pagado, setPagado] = useState(false);
   const [metodo, setMetodo] = useState("transferencia");
-  const [cliente, setCliente] = useState({ nombre: "", telefono: "", email: "", marketing_consentimiento: false });
+  const [cliente, setCliente] = useState({ nombre: "", telefono: "", email: "", tipo_cliente: "", marketing_consentimiento: false });
   const [clienteReconocido, setClienteReconocido] = useState(null);
   const [buscandoCliente, setBuscandoCliente] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
-  const datosCompletos = Boolean(cliente.nombre.trim() && cliente.telefono.trim() && cliente.email.trim());
+  const datosCompletos = Boolean(cliente.nombre.trim() && cliente.telefono.trim() && cliente.email.trim() && cliente.tipo_cliente);
 
   async function confirmarPago() {
-    if (!cliente.nombre.trim() || !cliente.telefono.trim() || !cliente.email.trim()) {
-      setError("Completa tu nombre, teléfono y correo para registrar tu pedido.");
+    if (!datosCompletos) {
+      setError("Completá tus datos y seleccioná el tipo de cliente para registrar el pedido.");
       return;
     }
     setEnviando(true);
@@ -597,6 +597,12 @@ function Pago({ carrito, onConfirmar, onVolver }) {
           {buscandoCliente && <span className="qr-note">Buscando tus datos…</span>}
           <input className="chat-input" type="tel" placeholder="Teléfono *" value={cliente.telefono} onChange={(event) => setCliente({ ...cliente, telefono: event.target.value })} required />
           <input className="chat-input" type="email" placeholder="Correo electrónico *" value={cliente.email} onChange={(event) => setCliente({ ...cliente, email: event.target.value })} required />
+          <select className="customer-type" value={cliente.tipo_cliente} onChange={(event) => setCliente({ ...cliente, tipo_cliente: event.target.value })} required>
+            <option value="" disabled>Tipo de cliente *</option>
+            <option value="estudiante">Estudiante</option>
+            <option value="academico_aden">Académico ADEN</option>
+            <option value="cliente_externo">Cliente externo</option>
+          </select>
           <label className="qr-note customer-consent">
             <input
               type="checkbox"
@@ -626,7 +632,7 @@ function Pago({ carrito, onConfirmar, onVolver }) {
           )}
           <div className="qr-total">{colones(total)}</div>
           {error && <p className="checkout-error" role="alert">{error}</p>}
-          {!datosCompletos && <p className="checkout-requirement">Completá nombre, teléfono y correo para continuar.</p>}
+          {!datosCompletos && <p className="checkout-requirement">Completá tus datos y elegí el tipo de cliente para continuar.</p>}
           <button className="btn-primary btn-xl" onClick={confirmarPago} disabled={enviando || !datosCompletos}>
             {enviando ? "Registrando pedido…" : metodo === "transferencia" ? "Ya realicé la transferencia" : "Simular pago confirmado"}
           </button>
@@ -1268,6 +1274,7 @@ export default function CafeSofiaPrototipo() {
         .checkout-error { margin: 0; color: #FFB0C3; background: rgba(255,122,156,.13); border: 1px solid rgba(255,122,156,.45); border-radius: 8px; padding: 9px 10px; font-size: 12px; line-height: 1.35; }
         .checkout-requirement { margin: 0; color: #B9B6E8; font-size: 12px; }
         .payment-summary .btn-primary:disabled { cursor: not-allowed; opacity: .48; }
+        .customer-type { width: 100%; box-sizing: border-box; appearance: auto; background: #1A1740; border: 1px solid #2C2A55; border-radius: 999px; color: #EAE9FB; font: inherit; font-size: 14px; padding: 10px 16px; outline: none; }
 
         .check-circle { width: 90px; height: 90px; border-radius: 50%; background: #3ED6A3; display: flex; align-items: center; justify-content: center; }
         .confirm-title { font-family: 'Space Grotesk', sans-serif; margin: 4px 0; }
