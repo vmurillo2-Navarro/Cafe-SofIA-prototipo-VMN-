@@ -506,6 +506,8 @@ function Pago({ carrito, onConfirmar, onVolver }) {
   const [buscandoCliente, setBuscandoCliente] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
+  const busquedaClienteRef = useRef(null);
+  const ultimoNombreBuscadoRef = useRef("");
   const datosCompletos = Boolean(cliente.nombre.trim() && cliente.telefono.trim() && cliente.email.trim() && cliente.tipo_cliente);
 
   async function confirmarPago() {
@@ -537,19 +539,25 @@ function Pago({ carrito, onConfirmar, onVolver }) {
     }
   }
 
-  async function buscarClienteFrecuente() {
+  async function buscarClienteFrecuente(silenciosa = false) {
     const nombre = cliente.nombre.trim();
-    if (nombre.length < 3) return;
+    const nombreNormalizado = nombre.toLowerCase();
+    if (nombre.length < 3 || nombreNormalizado === ultimoNombreBuscadoRef.current) return;
+    if (busquedaClienteRef.current) busquedaClienteRef.current.abort();
+    const controlador = new AbortController();
+    busquedaClienteRef.current = controlador;
     setBuscandoCliente(true);
-    setError("");
+    if (!silenciosa) setError("");
     try {
       const respuesta = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tipo: "buscar_cliente", nombre }),
+        signal: controlador.signal,
       });
       const resultado = await respuesta.json();
       if (!respuesta.ok || !resultado.ok) throw new Error(resultado.error || "No se pudieron buscar tus datos.");
+      ultimoNombreBuscadoRef.current = nombreNormalizado;
       if (resultado.cliente) {
         setCliente((actual) => ({
           ...actual,
@@ -562,9 +570,14 @@ function Pago({ carrito, onConfirmar, onVolver }) {
         setClienteReconocido(null);
       }
     } catch (lookupError) {
-      setError("No pudimos buscar tus datos ahora. Podés completar el formulario manualmente.");
+      if (lookupError.name !== "AbortError" && !silenciosa) {
+        setError("No pudimos buscar tus datos ahora. Podés completar el formulario manualmente.");
+      }
     } finally {
-      setBuscandoCliente(false);
+      if (busquedaClienteRef.current === controlador) {
+        busquedaClienteRef.current = null;
+        setBuscandoCliente(false);
+      }
     }
   }
 
@@ -601,8 +614,8 @@ function Pago({ carrito, onConfirmar, onVolver }) {
       <div className="payment-content">
         <div className="customer-form">
           <p className="qr-hint">Completá tus datos para registrar el pedido y validar la transferencia.</p>
-          <input className="chat-input" type="text" placeholder="Nombre completo *" value={cliente.nombre} onChange={(event) => setCliente((actual) => ({ ...actual, nombre: event.target.value }))} required />
-          {cliente.nombre.trim().length >= 3 && <button className="customer-lookup" type="button" onClick={buscarClienteFrecuente} disabled={buscandoCliente}>{buscandoCliente ? "Buscando datos…" : "¿Ya compraste? Buscar mis datos"}</button>}
+          <input className="chat-input" type="text" placeholder="Nombre completo *" value={cliente.nombre} onChange={(event) => { ultimoNombreBuscadoRef.current = ""; setCliente((actual) => ({ ...actual, nombre: event.target.value })); }} onBlur={() => buscarClienteFrecuente(true)} required />
+          {buscandoCliente && <span className="customer-lookup">Buscando datos guardados…</span>}
           {clienteReconocido?.recurrente && <span className="customer-found">Datos de cliente frecuente encontrados.</span>}
           <input className="chat-input" type="tel" placeholder="Teléfono *" value={cliente.telefono} onChange={(event) => setCliente({ ...cliente, telefono: event.target.value })} required />
           <input className="chat-input" type="email" placeholder="Correo electrónico *" value={cliente.email} onChange={(event) => setCliente({ ...cliente, email: event.target.value })} required />
