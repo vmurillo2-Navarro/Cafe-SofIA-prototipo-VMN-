@@ -17,6 +17,8 @@ const VENTAS_HOY = [
   { hora: "13h", monto: 30 }, { hora: "14h", monto: 12 },
 ];
 
+const CLIENTE_VACIO = { nombre: "", telefono: "", email: "", tipo_cliente: "", marketing_consentimiento: false };
+
 const DESAFIOS = [
   {
     numero: "01",
@@ -504,11 +506,9 @@ function Pedido({ menu, masVendido, carrito, setCarrito, onIrPago, onVolver }) {
 }
 
 // ---------- Pantalla: Pago QR ----------
-function Pago({ carrito, onConfirmar, onVolver }) {
+function Pago({ carrito, cliente, setCliente, metodo, setMetodo, onConfirmar, onVolver }) {
   const total = carrito.reduce((acc, item) => acc + item.precio * item.qty, 0);
   const [pagado, setPagado] = useState(false);
-  const [metodo, setMetodo] = useState("transferencia");
-  const [cliente, setCliente] = useState({ nombre: "", telefono: "", email: "", tipo_cliente: "", marketing_consentimiento: false });
   const [clienteReconocido, setClienteReconocido] = useState(null);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
@@ -1110,6 +1110,8 @@ function Admin() {
 export default function CafeSofiaPrototipo() {
   const [pantalla, setPantalla] = useState("bienvenida");
   const [carrito, setCarrito] = useState([]);
+  const [clienteCheckout, setClienteCheckout] = useState(CLIENTE_VACIO);
+  const [metodoCheckout, setMetodoCheckout] = useState("transferencia");
   const [menu, setMenu] = useState(MENU);
   const [finanzas, setFinanzas] = useState(null);
   const [masVendido, setMasVendido] = useState(null);
@@ -1131,6 +1133,8 @@ export default function CafeSofiaPrototipo() {
 
   function irInicio() {
     setCarrito([]);
+    setClienteCheckout(CLIENTE_VACIO);
+    setMetodoCheckout("transferencia");
     setPantalla("bienvenida");
   }
 
@@ -1401,7 +1405,7 @@ export default function CafeSofiaPrototipo() {
         <Pedido menu={menu} masVendido={masVendido} carrito={carrito} setCarrito={setCarrito} onIrPago={() => setPantalla("pago")} onVolver={irInicio} />
       )}
       {pantalla === "pago" && (
-        <Pago carrito={carrito} onConfirmar={irInicio} onVolver={() => setPantalla("pedido")} />
+        <Pago carrito={carrito} cliente={clienteCheckout} setCliente={setClienteCheckout} metodo={metodoCheckout} setMetodo={setMetodoCheckout} onConfirmar={irInicio} onVolver={() => setPantalla("pedido")} />
       )}
       {pantalla === "desafios" && <Desafios onVolver={irInicio} />}
       {pantalla === "transparencia" && <Transparencia menu={menu} finanzas={finanzas} onVolver={irInicio} />}
