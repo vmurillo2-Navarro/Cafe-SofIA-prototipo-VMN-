@@ -885,6 +885,12 @@ function Admin() {
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
   const [seccion, setSeccion] = useState("resumen");
+  const [estadoVisual, setEstadoVisual] = useState("ociosa");
+
+  function mostrarExito() {
+    setEstadoVisual("feliz");
+    window.setTimeout(() => setEstadoVisual("ociosa"), 1600);
+  }
 
   async function cargarDatos(clave = password) {
     setCargando(true);
@@ -895,6 +901,7 @@ function Admin() {
       if (!respuesta.ok || !resultado.ok) throw new Error(resultado.error || "No se pudo cargar el panel.");
       setDatos(resultado);
       setAutenticado(true);
+      mostrarExito();
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -914,6 +921,7 @@ function Admin() {
       const resultado = await respuesta.json();
       if (!respuesta.ok || !resultado.ok) throw new Error(resultado.error || "La acción no pudo completarse.");
       setDatos(resultado);
+      mostrarExito();
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -957,6 +965,17 @@ function Admin() {
   const pedidosProveedor = datos?.pedidos_proveedor || [];
   const reposicionRecomendada = datos?.reposicion_recomendada || [];
   const finanzas = datos?.finanzas || { ingresos: 0, gastos: 0, balance: 0, ventas_registradas: 0, aclaracion: "" };
+  const hayAlertaStock = (datos?.insumos || []).some((item) => Boolean(item.alerta_disparada) || Number(item.stock) <= Number(item.umbral_min));
+  const estadoOrbeAdmin = cargando ? "pensando" : error || hayAlertaStock ? "alerta" : estadoVisual;
+  const textoEstadoAdmin = cargando
+    ? "SofIA está revisando los datos operativos."
+    : error
+      ? "SofIA necesita revisar una acción del panel."
+      : hayAlertaStock
+        ? "SofIA detectó inventario que requiere atención."
+        : estadoVisual === "feliz"
+          ? "SofIA registró la última acción correctamente."
+          : "SofIA está monitoreando la operación del café.";
   return (
     <>
       <style>{`
@@ -979,6 +998,25 @@ function Admin() {
         .admin-finance-value { color: #F4C863; font-family: Space Grotesk, sans-serif; font-size: 24px; font-weight: 700; }
         .admin-finance-positive { color: #3ED6A3; }
         .admin-finance-negative, .stock-alert { color: #FF7A9C; }
+        .admin-sofia-status { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+        .admin-sofia-status .tcard-label { margin-bottom: 5px; }
+        .admin-sofia-status p { color: #B9B6E8; font-size: 13px; }
+        .sofia-orb { --orb-color: #6C68A6; --orb-size: 84px; width: var(--orb-size); height: var(--orb-size); position: relative; flex: 0 0 var(--orb-size); display: grid; place-items: center; border-radius: 50%; isolation: isolate; animation: orb-breathe 4s ease-in-out infinite; }
+        .sofia-orb-core { width: 72%; height: 72%; border-radius: 50%; background: radial-gradient(circle at 34% 28%, #fff 0%, var(--orb-color) 20%, #171431 74%); box-shadow: 0 0 18px color-mix(in srgb, var(--orb-color) 72%, transparent), inset 0 0 10px rgba(255,255,255,.18); }
+        .sofia-orb-orbit { position: absolute; width: 100%; height: 100%; border: 1px solid color-mix(in srgb, var(--orb-color) 45%, transparent); border-radius: 46% 54% 48% 52%; opacity: 0; pointer-events: none; }
+        .sofia-orb-orbit-two { width: 82%; height: 82%; border-style: dashed; }
+        .sofia-orb-ociosa, .sofia-orb-idle { animation: orb-breathe 4s ease-in-out infinite; }
+        .sofia-orb-pensando { animation: orb-think 1.2s ease-in-out infinite; }
+        .sofia-orb-pensando .sofia-orb-orbit { opacity: .9; animation: orb-orbit 1.5s linear infinite; }
+        .sofia-orb-pensando .sofia-orb-orbit-two { animation-direction: reverse; animation-duration: 1.05s; }
+        .sofia-orb-feliz { animation: orb-happy .7s ease-in-out 2; }
+        .sofia-orb-alerta { animation: orb-alert .7s ease-in-out 2; }
+        @keyframes orb-breathe { 0%, 100% { transform: scale(1); filter: brightness(.95); } 50% { transform: scale(1.055); filter: brightness(1.2); } }
+        @keyframes orb-think { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.075) rotate(2deg); } }
+        @keyframes orb-orbit { to { transform: rotate(360deg); } }
+        @keyframes orb-happy { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.18) translateY(-3px); } 70% { transform: scale(.98) translateY(0); } }
+        @keyframes orb-alert { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px) scale(1.06); } 75% { transform: translateX(5px) scale(1.06); } }
+        @media (prefers-reduced-motion: reduce) { .sofia-orb, .sofia-orb * { animation: none !important; } }
         @media (min-width: 721px) {
           .app-root { height: 100dvh; min-height: 0; overflow: hidden; }
           .admin-screen { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 20px 28px; overflow: hidden; }
@@ -1014,6 +1052,7 @@ function Admin() {
           </aside>
           <main className="admin-panel">
             {seccion === "resumen" && <>
+              <div className="tcard admin-sofia-status"><Orbe estado={estadoOrbeAdmin} size={84} /><div><div className="tcard-label">Estado de SofIA</div><strong>{estadoOrbeAdmin === "alerta" ? "Atención requerida" : estadoOrbeAdmin === "pensando" ? "Procesando" : estadoOrbeAdmin === "feliz" ? "Acción completada" : "Monitoreando"}</strong><p>{textoEstadoAdmin}</p></div></div>
               <div className="tcard admin-mode"><div><div className="tcard-label">Modo real</div><p className="qr-note">Apagado = simulador. Activo = ventas y reloj reales.</p></div><label className="mode-toggle"><input type="checkbox" checked={Boolean(datos.modo_real)} onChange={cambiarModoReal} disabled={cargando} /><span>{datos.modo_real ? "Activo" : "Apagado"}</span></label></div>
               <div className="tcard admin-finance"><div className="tcard-label">Resultado financiero operativo</div><div className="admin-finance-grid"><div className="admin-finance-card"><span className="admin-finance-label">Ingresos</span><strong className="admin-finance-value admin-finance-positive">{colones(Number(finanzas.ingresos) || 0)}</strong><span className="admin-finance-note">{finanzas.ventas_registradas || 0} ventas</span></div><div className="admin-finance-card"><span className="admin-finance-label">Gastos</span><strong className="admin-finance-value">{colones(Number(finanzas.gastos) || 0)}</strong><span className="admin-finance-note">Egresos en caja</span></div><div className="admin-finance-card"><span className="admin-finance-label">Balance</span><strong className={`admin-finance-value ${(Number(finanzas.balance) || 0) >= 0 ? "admin-finance-positive" : "admin-finance-negative"}`}>{colones(Number(finanzas.balance) || 0)}</strong><span className="admin-finance-note">Ingresos menos gastos</span></div></div></div>
               <div className="transp-grid"><div className="tcard"><div className="tcard-label">Estado operativo</div><p>{reposicionRecomendada.length ? `${reposicionRecomendada.length} reposiciones requieren atención.` : "El inventario está dentro de los umbrales."}</p></div><div className="tcard"><div className="tcard-label">Pendientes</div><p>{transferencias.length} cobros y {pedidosProveedor.length} pedidos al proveedor por resolver.</p></div></div>
