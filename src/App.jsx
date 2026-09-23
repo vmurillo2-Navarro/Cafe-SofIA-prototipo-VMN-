@@ -96,7 +96,7 @@ function Bienvenida({ onStart }) {
 }
 
 // ---------- Pantalla: Pedido (chat) ----------
-function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
+function Pedido({ menu, masVendido, carrito, setCarrito, onIrPago, onVolver }) {
   const [mensajes, setMensajes] = useState([
     { de: "sofia", texto: "¡Hola! Soy SofIA. ¿Qué te gustaría tomar hoy? Puedo contarte qué tenemos disponible." },
   ]);
@@ -447,7 +447,10 @@ function Pedido({ menu, carrito, setCarrito, onIrPago, onVolver }) {
         </div>
 
         <div className="menu-col">
-          <div className="menu-col-title">Carta de hoy</div>
+          <div className="menu-col-heading">
+            <div className="menu-col-title">Carta de hoy</div>
+            {masVendido && <div className="top-seller"><span>Más pedido</span><strong>{masVendido.producto}</strong><small>{masVendido.vendidos} ventas</small></div>}
+          </div>
           <div className="menu-grid">
             {menu.length === 0 && <p className="qr-note">Consultando el catálogo real…</p>}
             {menu.map((p) => (
@@ -1094,6 +1097,7 @@ export default function CafeSofiaPrototipo() {
   const [carrito, setCarrito] = useState([]);
   const [menu, setMenu] = useState(MENU);
   const [finanzas, setFinanzas] = useState(null);
+  const [masVendido, setMasVendido] = useState(null);
   const [catalogoError, setCatalogoError] = useState("");
 
   useEffect(() => {
@@ -1103,6 +1107,7 @@ export default function CafeSofiaPrototipo() {
         if (!resultado.ok || !Array.isArray(resultado.productos)) throw new Error(resultado.error || "No se pudo consultar el catálogo.");
         setMenu(resultado.productos);
         setFinanzas(resultado.finanzas || null);
+        setMasVendido(resultado.mas_vendido || null);
       })
       .catch(() => setCatalogoError("No pudimos actualizar el inventario real; intenta recargar la página."));
   }, [pantalla]);
@@ -1255,7 +1260,12 @@ export default function CafeSofiaPrototipo() {
         .chat-input::placeholder { color: #7B78A8; }
 
         .menu-col { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
-        .menu-col-title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #B9B6E8; margin-bottom: 10px; }
+        .menu-col-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+        .menu-col-title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #B9B6E8; }
+        .top-seller { display: flex; align-items: baseline; gap: 6px; color: #F4C863; font-size: 11px; min-width: 0; }
+        .top-seller span { color: #B9B6E8; text-transform: uppercase; font-size: 9px; font-weight: 900; letter-spacing: 1px; white-space: nowrap; }
+        .top-seller strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .top-seller small { color: #7B78A8; white-space: nowrap; }
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .menu-card { text-align: left; background: #141233; border: 1px solid rgba(155,92,246,0.18); border-radius: 16px; padding: 12px; cursor: pointer; color: #EAE9FB; font-family: inherit; }
         .menu-card:hover { border-color: #9B5CF6; }
@@ -1365,7 +1375,7 @@ export default function CafeSofiaPrototipo() {
 
       {pantalla === "bienvenida" && <Bienvenida onStart={() => setPantalla("pedido")} />}
       {pantalla === "pedido" && (
-        <Pedido menu={menu} carrito={carrito} setCarrito={setCarrito} onIrPago={() => setPantalla("pago")} onVolver={irInicio} />
+        <Pedido menu={menu} masVendido={masVendido} carrito={carrito} setCarrito={setCarrito} onIrPago={() => setPantalla("pago")} onVolver={irInicio} />
       )}
       {pantalla === "pago" && (
         <Pago carrito={carrito} onConfirmar={irInicio} onVolver={() => setPantalla("pedido")} />
