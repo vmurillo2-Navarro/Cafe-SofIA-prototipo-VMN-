@@ -503,10 +503,8 @@ function Pago({ carrito, onConfirmar, onVolver }) {
   const [metodo, setMetodo] = useState("transferencia");
   const [cliente, setCliente] = useState({ nombre: "", telefono: "", email: "", tipo_cliente: "", marketing_consentimiento: false });
   const [clienteReconocido, setClienteReconocido] = useState(null);
-  const [buscandoCliente, setBuscandoCliente] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
-  const busquedaClienteRef = useRef(null);
   const ultimoNombreBuscadoRef = useRef("");
   const datosCompletos = Boolean(cliente.nombre.trim() && cliente.telefono.trim() && cliente.email.trim() && cliente.tipo_cliente);
 
@@ -543,17 +541,11 @@ function Pago({ carrito, onConfirmar, onVolver }) {
     const nombre = cliente.nombre.trim();
     const nombreNormalizado = nombre.toLowerCase();
     if (nombre.length < 3 || nombreNormalizado === ultimoNombreBuscadoRef.current) return;
-    if (busquedaClienteRef.current) busquedaClienteRef.current.abort();
-    const controlador = new AbortController();
-    busquedaClienteRef.current = controlador;
-    setBuscandoCliente(true);
-    if (!silenciosa) setError("");
     try {
       const respuesta = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tipo: "buscar_cliente", nombre }),
-        signal: controlador.signal,
       });
       const resultado = await respuesta.json();
       if (!respuesta.ok || !resultado.ok) throw new Error(resultado.error || "No se pudieron buscar tus datos.");
@@ -570,13 +562,8 @@ function Pago({ carrito, onConfirmar, onVolver }) {
         setClienteReconocido(null);
       }
     } catch (lookupError) {
-      if (lookupError.name !== "AbortError" && !silenciosa) {
+      if (!silenciosa) {
         setError("No pudimos buscar tus datos ahora. Podés completar el formulario manualmente.");
-      }
-    } finally {
-      if (busquedaClienteRef.current === controlador) {
-        busquedaClienteRef.current = null;
-        setBuscandoCliente(false);
       }
     }
   }
@@ -615,7 +602,6 @@ function Pago({ carrito, onConfirmar, onVolver }) {
         <div className="customer-form">
           <p className="qr-hint">Completá tus datos para registrar el pedido y validar la transferencia.</p>
           <input className="chat-input" type="text" placeholder="Nombre completo *" value={cliente.nombre} onChange={(event) => { ultimoNombreBuscadoRef.current = ""; setCliente((actual) => ({ ...actual, nombre: event.target.value })); }} onBlur={() => buscarClienteFrecuente(true)} required />
-          {buscandoCliente && <span className="customer-lookup">Buscando datos guardados…</span>}
           {clienteReconocido?.recurrente && <span className="customer-found">Datos de cliente frecuente encontrados.</span>}
           <input className="chat-input" type="tel" placeholder="Teléfono *" value={cliente.telefono} onChange={(event) => setCliente({ ...cliente, telefono: event.target.value })} required />
           <input className="chat-input" type="email" placeholder="Correo electrónico *" value={cliente.email} onChange={(event) => setCliente({ ...cliente, email: event.target.value })} required />
