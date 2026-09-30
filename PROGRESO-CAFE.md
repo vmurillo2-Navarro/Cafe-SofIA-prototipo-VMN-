@@ -24,3 +24,5 @@ _(Lo importante para retomar. Sin claves ni contraseñas.)_
 - Pendiente — pegar la versión protegida de `doPost` en Apps Script y republicar como nueva versión.
 - Transferencia bancaria implementada localmente: BAC San José, alias Banco, BAC; queda pendiente republicar Apps Script y probar el estado pendiente.
 - Prueba de transferencia completada: pedido recibido y guardado como pendiente.
+- Catálogo: vasos Ecolyptus 8 oz (₡49,60/u; mínimo 100), azúcar Doña María (₡6,33/sobre; mínimo 200) y removedores Fapaco (₡4,16/u; mínimo 250) se usan en las seis bebidas; stock actual de estos tres insumos = 0. Actualizar `apps-script/codigo.gs` en Apps Script y republicar como nueva versión.
+- Base de conocimiento: la hoja `Datos` se consulta para preguntas informativas no resueltas por el chat. Debe tener columnas `Pregunta` y `Respuesta`; publicar la versión actualizada de Apps Script y luego desplegar el endpoint `/api/knowledge` junto con el frontend.

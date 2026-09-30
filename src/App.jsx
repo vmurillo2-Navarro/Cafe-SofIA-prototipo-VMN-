@@ -359,16 +359,25 @@ function Pedido({ menu, masVendido, carrito, setCarrito, onIrPago, onVolver }) {
       } else if (match) {
         agregarAlCarritoDesdeTexto(match);
       } else {
-        setMensajes((m) => [
-          ...m,
-          {
-            de: "sofia",
-            texto:
-              "No estoy segura de haber entendido bien eso. Puedo contarte el menú, el stock, recomendarte algo, o sumar un producto directo a tu pedido — probá preguntarme o elegí una opción de abajo.",
-          },
-        ]);
-        setEstadoOrbe("alerta");
-        setTimeout(() => setEstadoOrbe("ociosa"), 1400);
+        fetch(`/api/knowledge?q=${encodeURIComponent(texto)}`, { cache: "no-store" })
+          .then((respuesta) => respuesta.json())
+          .then((resultado) => {
+            const respuestaDatos = resultado.ok && resultado.encontrada ? resultado.respuesta : null;
+            setMensajes((m) => [
+              ...m,
+              {
+                de: "sofia",
+                texto: respuestaDatos || "No estoy segura de haber entendido bien eso. Puedo contarte el menú, el stock, recomendarte algo, o sumar un producto directo a tu pedido — probá preguntarme o elegí una opción de abajo.",
+              },
+            ]);
+            setEstadoOrbe(respuestaDatos ? "hablando" : "alerta");
+            setTimeout(() => setEstadoOrbe(respuestaDatos ? "idle" : "ociosa"), respuestaDatos ? 900 : 1400);
+          })
+          .catch(() => {
+            setMensajes((m) => [...m, { de: "sofia", texto: "No pude consultar esa información ahora. Probá de nuevo en un momento." }]);
+            setEstadoOrbe("alerta");
+            setTimeout(() => setEstadoOrbe("ociosa"), 1400);
+          });
       }
     }, 700);
   }
@@ -684,7 +693,7 @@ function Desafios({ onVolver }) {
   }
 
   return (
-    <div className="screen">
+    <div className="screen challenge-screen">
       <TopBar titulo="Desafíos" onVolver={onVolver} />
       <div className="challenge-intro">
         <span className="eyebrow">Café + formación</span>
@@ -694,6 +703,7 @@ function Desafios({ onVolver }) {
         </p>
       </div>
 
+      <div className="challenge-panels">
       <div className="challenge-active">
         <div className="challenge-label">Desafío 01 · En curso</div>
         <h2>¿Qué hace agéntica a SofIA?</h2>
@@ -733,6 +743,7 @@ function Desafios({ onVolver }) {
         )}
         <span className="challenge-note">Más adelante podremos sumar circuitos reales de retorno y reciclaje.</span>
       </div>
+      </div>
 
       <div className="challenge-path">
         <div className="tcard-label">El recorrido</div>
@@ -763,7 +774,7 @@ function Transparencia({ menu, onVolver, finanzas }) {
   const gastosDetalle = finanzas?.gastos_detalle || [];
 
   return (
-    <div className="screen">
+    <div className="screen transparency-screen">
       <TopBar titulo="Transparencia — cómo funciona SofIA" onVolver={onVolver} />
       <p className="transp-intro">
         Café SofIA opera solo, sin caja registradora tradicional. Esta pantalla es pública: cualquiera puede ver en
@@ -1431,6 +1442,95 @@ export default function CafeSofiaPrototipo() {
           .nav-inferior { gap: 6px; padding: 8px; }
           .store-nav-btn { min-height: 48px; font-size: 12px; gap: 5px; }
           .store-nav-btn svg { width: 18px; height: 18px; }
+        }
+        @media (min-width: 1100px) and (min-height: 720px) {
+          .challenge-screen {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            grid-template-rows: auto auto auto auto;
+            align-content: center;
+            gap: 10px 14px;
+            padding: 18px 28px;
+            min-height: 0;
+            overflow: hidden;
+          }
+          .challenge-screen > .topbar,
+          .challenge-intro,
+          .challenge-panels,
+          .challenge-path { grid-column: 1 / -1; }
+          .challenge-screen > .topbar { margin: 0; }
+          .challenge-intro { margin: 0; }
+          .challenge-intro .section-title { font-size: 25px; margin: 4px 0 5px; }
+          .challenge-intro .transp-intro { max-width: 900px; font-size: 12px; line-height: 1.4; margin: 0; }
+          .challenge-panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; min-height: 0; }
+          .challenge-panels .challenge-active { max-width: none; padding: 13px 15px; border-radius: 12px; }
+          .challenge-panels .challenge-active h2 { font-size: 18px; margin: 5px 0; }
+          .challenge-panels .challenge-active p { font-size: 12px; line-height: 1.35; margin: 0 0 8px; }
+          .challenge-panels .challenge-label { font-size: 10px; }
+          .challenge-panels .challenge-options { gap: 6px; }
+          .challenge-panels .challenge-option { font-size: 11px; line-height: 1.3; padding: 7px 9px; }
+          .challenge-panels .circular-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .challenge-panels .circular-option { min-height: 42px; }
+          .challenge-panels .circular-confirm { margin-top: 7px; padding: 8px 12px; }
+          .challenge-panels .challenge-note { font-size: 9px; margin-top: 7px; }
+          .challenge-path { max-width: none; margin-top: 0; }
+          .challenge-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 5px; }
+          .challenge-card { min-height: 0; padding: 9px 11px; border-radius: 10px; }
+          .challenge-number { font-size: 18px; }
+          .challenge-card h3 { font-size: 12px; margin: 4px 0; }
+          .challenge-card p { font-size: 10px; line-height: 1.3; margin: 0 0 5px; }
+          .challenge-status { font-size: 9px; }
+
+          .transparency-screen {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            grid-template-rows: auto auto auto auto auto;
+            align-content: center;
+            gap: 8px 12px;
+            padding: 16px 24px;
+            min-height: 0;
+            overflow: hidden;
+          }
+          .transparency-screen > .topbar,
+          .transparency-screen > .transp-intro,
+          .transparency-screen > .transp-grid,
+          .transparency-screen > .transp-footer { grid-column: 1 / -1; }
+          .transparency-screen > .topbar { margin: 0; }
+          .transparency-screen > .transp-intro { max-width: none; font-size: 12px; line-height: 1.35; margin: 0; }
+          .transparency-screen > .transp-project-card { grid-column: span 4; margin: 0; padding: 10px 12px; border-radius: 10px; }
+          .transparency-screen > .agent-card { grid-column: span 3; margin: 0; padding: 10px 12px; border-radius: 10px; }
+          .transparency-screen > .finance-section { grid-column: span 5; margin: 0; min-width: 0; }
+          .transparency-screen .tcard { padding: 9px 10px; border-radius: 10px; }
+          .transparency-screen .tcard-label { font-size: 10px; margin-bottom: 5px; }
+          .transparency-screen .project-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 8px; }
+          .transparency-screen .project-steps strong,
+          .transparency-screen .agent-steps strong { font-size: 10px; }
+          .transparency-screen .project-steps span,
+          .transparency-screen .agent-steps span { font-size: 9px; line-height: 1.25; }
+          .transparency-screen .project-note { font-size: 9px; line-height: 1.25; margin-top: 6px; padding-top: 6px; }
+          .transparency-screen .agent-steps { gap: 5px; }
+          .transparency-screen .finance-heading { align-items: flex-start; flex-direction: column; gap: 0; }
+          .transparency-screen .demo-label { font-size: 9px; }
+          .transparency-screen .finance-grid { gap: 5px; }
+          .transparency-screen .finance-card { gap: 4px; padding: 7px; }
+          .transparency-screen .finance-label { font-size: 9px; }
+          .transparency-screen .finance-value { font-size: 16px; }
+          .transparency-screen .finance-note { font-size: 8px; }
+          .transparency-screen .transp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; min-height: 0; align-content: start; }
+          .transparency-screen .tcard-number { font-size: 22px; margin-bottom: 5px; }
+          .transparency-screen .bars { height: 48px; }
+          .transparency-screen .bars .bar { max-height: 40px; }
+          .transparency-screen .bar-label { font-size: 8px; }
+          .transparency-screen .stock-row { gap: 5px; font-size: 9px; margin-bottom: 4px; }
+          .transparency-screen .stock-name { width: 78px; }
+          .transparency-screen .stock-qty { width: 20px; }
+          .transparency-screen .gasto-row { gap: 6px; font-size: 9px; padding: 4px 0; }
+          .transparency-screen .gasto-fecha { font-size: 8px; }
+          .transparency-screen .gasto-total { font-size: 9px; margin-top: 5px; }
+          .transparency-screen .estado-sofia { gap: 8px; }
+          .transparency-screen .transparency-avatar { width: 40px; height: 40px; }
+          .transparency-screen .estado-desc { font-size: 9px; line-height: 1.3; }
+          .transparency-screen .transp-footer { font-size: 9px; line-height: 1.25; margin: 0; }
         }
       `}</style>
 
