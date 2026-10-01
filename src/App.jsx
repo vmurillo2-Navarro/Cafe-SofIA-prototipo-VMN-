@@ -1028,7 +1028,7 @@ function Admin() {
     <>
       <style>{`
         .app-root { font-family: Lato, sans-serif; background: linear-gradient(180deg, #0B0A1F 0%, #120E33 45%, #0B0A1F 100%); color: #EAE9FB; min-height: 100vh; width: 100%; display: flex; flex-direction: column; }
-        .screen { width: 100%; max-width: 1100px; box-sizing: border-box; margin: 0 auto; padding: 28px 32px; position: relative; }
+        .screen { width: 100%; max-width: none; box-sizing: border-box; margin: 0 auto; padding: 28px 32px; position: relative; }
         .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
         .back-btn { background: rgba(255,255,255,.08); border: 0; color: #EAE9FB; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; }
         .topbar-title { font-family: Space Grotesk, sans-serif; font-size: 22px; font-weight: 700; }
